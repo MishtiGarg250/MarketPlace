@@ -8,6 +8,8 @@ const productRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const app = express();
+const searchRoutes = require('./routes/searchRoutes');
+const notificationRoutes = require("./routes/notificationRoutes");
 const { Server } = require("socket.io");
 
 const io = new Server(server, {
@@ -36,6 +38,8 @@ app.use(bodyParser.json());
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use('/api/search', searchRoutes);
 
 
 const PORT = process.env.PORT || 5000;
