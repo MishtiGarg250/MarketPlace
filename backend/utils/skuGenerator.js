@@ -5,4 +5,4 @@ const generateSKU = (productName) => {
   return crypto.createHash('md5').update(productName + seed).digest('hex').slice(0,8).toUpperCase();
 };
 
-module.exports = generateSKU;
+module.exports=generateSKU
