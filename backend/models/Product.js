@@ -7,6 +7,12 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   SKU: { type: String, unique: true },
   category: String,
+  images: [
+        {
+            url: { type: String },
+            alt: { type: String, default: "Product Image" }
+        }
+    ],
   quantity: { type: Number, default: 1 },
   isFeatured: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
