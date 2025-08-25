@@ -7,7 +7,8 @@ const{
     createProduct,
     getProducts,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    markFeatured
 } = require("../controllers/productController");
 
 const storage = multer.diskStorage({
@@ -21,7 +22,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+
 router.get("/", getProducts);
 router.post("/", protect, authorize("seller"), upload.array("images", 5), createProduct); 
 router.put("/:id", protect, authorize("seller"), updateProduct);
 router.delete("/:id", protect, authorize("seller"), deleteProduct);
+router.put("/:id/feature", protect, authorize("seller"), markFeatured);

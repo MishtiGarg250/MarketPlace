@@ -109,9 +109,24 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+exports.markFeatured = async(req,res)=>{
+    try{
+        const product = await Product.findByIdAndUpdate(
+            req.params.id,
+            {isFeatured: true},
+            {new:true}
+        )
+        res.json(product)
+    }catch(err){
+        res.status(500).json({msg:"Error marking product as featured"})
+    }
+
+}
+
 module.exports = {
     createProduct,
     deleteProduct,
     getProducts,
-    updateProduct
+    updateProduct,
+    markFeatured
 };
