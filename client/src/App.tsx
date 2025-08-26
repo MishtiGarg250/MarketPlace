@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom"
 import { CartProvider } from "./contexts/cart-context"
 import ProfilePage from "./pages/Profile"
 import ProductDetailPage from "./pages/SingleProduct"
+import CartPage from "./pages/Cart"
 function App() {
 
   return (
@@ -13,6 +14,7 @@ function App() {
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/products/:id" element={<ProductDetailPage/>}/>
+      <Route path="/cart" element={<CartPage/>}/>
     </Routes>
     </CartProvider>
     
