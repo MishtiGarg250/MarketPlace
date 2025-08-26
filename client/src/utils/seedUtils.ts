@@ -11,7 +11,7 @@ export function generateColorFromSeed(seed: string): string {
 
   // Generate a vibrant color
   const hue = Math.abs(hash) % 360
-  return `hsl(${hue}, 70%, 50%)`
+  return `hsl(${hue}, 50%, 60%)`
 }
 
 

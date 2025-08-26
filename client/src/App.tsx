@@ -5,6 +5,7 @@ import { CartProvider } from "./contexts/cart-context"
 import ProfilePage from "./pages/Profile"
 import ProductDetailPage from "./pages/SingleProduct"
 import CartPage from "./pages/Cart"
+import AboutPage from "./pages/About"
 function App() {
 
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/products/:id" element={<ProductDetailPage/>}/>
       <Route path="/cart" element={<CartPage/>}/>
+      <Route path="/about" element={<AboutPage/>}/>
     </Routes>
     </CartProvider>
     
