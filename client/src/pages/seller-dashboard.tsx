@@ -32,6 +32,7 @@ import {
 export default function SellerDashboardPage() {
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [products, setProducts] = useState<any[]>([])
+  const [productReviews, setProductReviews] = useState<{ [productId: string]: any[] }>({});
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [newProduct, setNewProduct] = useState({
@@ -79,6 +80,19 @@ export default function SellerDashboardPage() {
             avatar: profRes.data.avatar || "",
             location: profRes.data.location || "",
           })
+          // Fetch reviews for each product
+          const reviewsObj: { [productId: string]: any[] } = {};
+          await Promise.all(
+            prodRes.data.products.map(async (product: any) => {
+              try {
+                const res = await api.get(`/reviews/product/${product._id}`);
+                reviewsObj[product._id] = res.data;
+              } catch {
+                reviewsObj[product._id] = [];
+              }
+            })
+          );
+          setProductReviews(reviewsObj);
         } else {
           setProducts([])
         }
@@ -272,7 +286,7 @@ export default function SellerDashboardPage() {
                       ) : products.length === 0 ? (
                         <div>No products found.</div>
                       ) : products.map((product) => (
-                        <Card key={product.id} className="border">
+                        <Card key={product._id} className="border">
                           <CardContent className="p-4">
                             <div className="flex items-center gap-4">
                               <img
@@ -305,6 +319,32 @@ export default function SellerDashboardPage() {
                                     <span className="text-muted-foreground">Views: </span>
                                     <span className="font-medium">{product.views || 0}</span>
                                   </div>
+                                </div>
+                                {/* Product Reviews */}
+                                <div className="mt-4">
+                                  <div className="font-semibold mb-1">Reviews:</div>
+                                  {productReviews[product._id] && productReviews[product._id].length > 0 ? (
+                                    <div className="space-y-2">
+                                      {productReviews[product._id].map((review: any) => (
+                                        <div key={review._id} className="flex items-center gap-2 text-sm">
+                                          <Avatar className="w-6 h-6">
+                                            <AvatarImage src={review.buyer?.avatar || "/placeholder.svg"} />
+                                            <AvatarFallback>{review.buyer?.name?.[0]}</AvatarFallback>
+                                          </Avatar>
+                                          <span className="font-medium">{review.buyer?.name || "User"}</span>
+                                          <span className="text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                          <span className="flex ml-2">
+                                            {[...Array(5)].map((_, i) => (
+                                              <Star key={i} className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                                            ))}
+                                          </span>
+                                          <span className="ml-2">{review.comment}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-muted-foreground">No reviews</div>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex flex-col gap-2">
@@ -368,6 +408,7 @@ export default function SellerDashboardPage() {
                                   <div className="text-right">
                                     <div className="text-sm">${item.price} each</div>
                                     <div className="text-xs text-muted-foreground">Buyer: {order.buyer?.name || order.buyer}</div>
+                                    <div className="text-xs text-muted-foreground">User ID: {order.buyer?._id || order.buyer}</div>
                                   </div>
                                 </div>
                               )) : <div className="text-muted-foreground">No items</div>}

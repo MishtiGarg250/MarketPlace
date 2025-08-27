@@ -1,5 +1,7 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "react-router-dom"
+import api from "../api/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,100 +10,84 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, Heart, Share2, ShoppingCart, MapPin, Package } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 
-const mockProduct = {
-  id: 1,
-  title: "Wireless Headphones",
-  price: 99.99,
-  originalPrice: 129.99,
-  images: [
-    "/wireless-headphones.png",
-    "/wireless-headphones-side.png",
-    "/wireless-headphones-case.png",
-    "/wireless-headphones-accessories.png",
-  ],
-  rating: 4.5,
-  reviews: 128,
-  seller: {
-    name: "TechStore",
-    avatar: "/tech-store-logo.png",
-    rating: 4.8,
-    totalSales: 1250,
-    joinedDate: "2022-03-15",
-  },
-  category: "Electronics",
-  condition: "New",
-  location: "New York, NY",
-  description:
-    "Experience premium sound quality with these wireless headphones featuring active noise cancellation, 30-hour battery life, and premium comfort padding. Perfect for music lovers, commuters, and professionals.",
-  specifications: {
-    Brand: "AudioTech",
-    Model: "AT-WH500",
-    "Battery Life": "30 hours",
-    Connectivity: "Bluetooth 5.0",
-    Weight: "250g",
-    Warranty: "2 years",
-  },
-  features: [
-    "Active Noise Cancellation",
-    "30-hour battery life",
-    "Quick charge (5 min = 2 hours)",
-    "Premium comfort padding",
-    "Bluetooth 5.0 connectivity",
-    "Built-in microphone",
-  ],
-  shipping: {
-    cost: "Free",
-    time: "2-3 business days",
-    returns: "30-day return policy",
-  },
-  stock: 15,
-}
 
-const mockReviews = [
-  {
-    id: 1,
-    user: "John D.",
-    avatar: "/diverse-user-avatars.png",
-    rating: 5,
-    date: "2024-01-15",
-    comment: "Excellent sound quality and comfort. The noise cancellation works great!",
-  },
-  {
-    id: 2,
-    user: "Sarah M.",
-    avatar: "/female-user-avatar.png",
-    rating: 4,
-    date: "2024-01-10",
-    comment: "Good headphones overall. Battery life is impressive as advertised.",
-  },
-  {
-    id: 3,
-    user: "Mike R.",
-    avatar: "/male-user-avatar.png",
-    rating: 5,
-    date: "2024-01-05",
-    comment: "Perfect for my daily commute. Highly recommend!",
-  },
-]
+
 
 export default function ProductDetailPage() {
-  const { addItem } = useCart()
+  const { addItem } = useCart();
+  const { id } = useParams();
+  const [product, setProduct] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [selectedImage, setSelectedImage] = useState(0)
-  const [quantity, setQuantity] = useState(1)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await api.get(`/products?id=${id}`);
+        setProduct(res.data.products[0]);
+      } catch (err) {
+        setError("Failed to load product");
+      }
+    };
+    const fetchReviews = async () => {
+      try {
+        const res = await api.get(`/reviews/product/${id}`);
+        setReviews(res.data);
+      } catch (err) {
+        setReviews([]);
+      }
+    };
+    if (id) {
+      fetchProduct();
+      fetchReviews();
+    }
+  }, [id]);
 
   const handleAddToCart = () => {
+    if (!product) return;
     addItem({
-      id: mockProduct.id,
-      title: mockProduct.title,
-      price: mockProduct.price,
-      image: mockProduct.images[0],
-      seller: mockProduct.seller.name,
-      category: mockProduct.category,
-      stock: mockProduct.stock,
+      id: product._id,
+      title: product.name,
+      price: product.price,
+      image: product.images?.[0]?.url || "",
+      seller: product.sellerId,
+      category: product.category,
+      stock: product.quantity,
       quantity: quantity,
-    })
+    });
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setReviewLoading(true);
+    setError("");
+    try {
+      await api.post("/reviews", {
+        sellerId: product.sellerId,
+        productId: product._id,
+        rating: reviewRating,
+        comment: reviewText,
+      });
+      setReviewText("");
+      setReviewRating(5);
+      // Refresh reviews
+      const res = await api.get(`/reviews/product/${id}`);
+      setReviews(res.data);
+      console.log(reviews);
+    } catch (err) {
+      setError("Failed to submit review");
+    }
+    setReviewLoading(false);
+  };
+
+  if (!product) {
+    return <div className="p-8 text-center">Loading...</div>;
   }
 
   return (
@@ -119,7 +105,7 @@ export default function ProductDetailPage() {
               Products
             </a>
             <span>/</span>
-            <span className="text-foreground">{mockProduct.title}</span>
+            <span className="text-foreground">{product.name}</span>
           </div>
         </nav>
 
@@ -128,13 +114,13 @@ export default function ProductDetailPage() {
           <div className="space-y-4">
             <div className="aspect-square rounded-lg overflow-hidden bg-muted">
               <img
-                src={mockProduct.images[selectedImage] || "/placeholder.svg"}
-                alt={mockProduct.title}
+                src={product.images?.[selectedImage]?.url || "/placeholder.svg"}
+                alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {mockProduct.images.map((image, index) => (
+              {product.images?.map((img: any, index: number) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -143,8 +129,8 @@ export default function ProductDetailPage() {
                   }`}
                 >
                   <img
-                    src={image || "/placeholder.svg"}
-                    alt={`${mockProduct.title} view ${index + 1}`}
+                    src={img.url || "/placeholder.svg"}
+                    alt={`${product.name} view ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -156,38 +142,40 @@ export default function ProductDetailPage() {
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-primary text-primary-foreground">{mockProduct.category}</Badge>
-                <Badge variant="outline">{mockProduct.condition}</Badge>
+                <Badge className="bg-primary text-primary-foreground">{product.category}</Badge>
+                <Badge variant="outline">{product.condition}</Badge>
               </div>
-              <h1 className="font-space-grotesk text-3xl font-bold text-foreground mb-2">{mockProduct.title}</h1>
+              <h1 className="font-space-grotesk text-3xl font-bold text-foreground mb-2">{product.name}</h1>
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="ml-1 font-medium">{mockProduct.rating}</span>
-                  <span className="ml-1 text-muted-foreground">({mockProduct.reviews} reviews)</span>
+                  <span className="ml-1 font-medium">{product.rating || "-"}</span>
+                  <span className="ml-1 text-muted-foreground">({reviews.length} reviews)</span>
                 </div>
                 <div className="flex items-center text-muted-foreground">
                   <MapPin className="h-4 w-4 mr-1" />
-                  {mockProduct.location}
+                  {product.location}
                 </div>
               </div>
             </div>
 
             
             <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-primary">${mockProduct.price}</span>
-              {mockProduct.originalPrice && (
-                <span className="text-xl text-muted-foreground line-through">${mockProduct.originalPrice}</span>
+              <span className="text-4xl font-bold text-primary">${product.price}</span>
+              {product.originalPrice && (
+                <span className="text-xl text-muted-foreground line-through">${product.originalPrice}</span>
               )}
-              <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground">
-                Save ${(mockProduct.originalPrice! - mockProduct.price).toFixed(2)}
-              </Badge>
+              {product.originalPrice && (
+                <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground">
+                  Save ${(product.originalPrice - product.price).toFixed(2)}
+                </Badge>
+              )}
             </div>
 
             
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-green-600" />
-              <span className="text-green-600 font-medium">{mockProduct.stock} in stock</span>
+              <span className="text-green-600 font-medium">{product.quantity} in stock</span>
             </div>
 
             
@@ -206,7 +194,7 @@ export default function ProductDetailPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setQuantity(Math.min(mockProduct.stock, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
                     className="px-3"
                   >
                     +
@@ -237,16 +225,16 @@ export default function ProductDetailPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={mockProduct.seller.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>{mockProduct.seller.name[0]}</AvatarFallback>
+                      <AvatarImage src={product.seller?.avatar || "/placeholder.svg"} />
+                      <AvatarFallback>{product.seller?.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold">{mockProduct.seller.name}</h3>
+                      <h3 className="font-semibold">{product.seller?.name}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span>{mockProduct.seller.rating}</span>
+                        <span>{product.seller?.rating || "-"}</span>
                         <span>•</span>
-                        <span>{mockProduct.seller.totalSales} sales</span>
+                        <span>{product.seller?.totalSales || 0} sales</span>
                       </div>
                     </div>
                   </div>
@@ -261,15 +249,15 @@ export default function ProductDetailPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-medium text-green-600">{mockProduct.shipping.cost}</span>
+                    <span className="font-medium text-green-600">{product.shipping?.cost || "Free"}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Delivery</span>
-                    <span className="font-medium">{mockProduct.shipping.time}</span>
+                    <span className="font-medium">{product.shipping?.time || "-"}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Returns</span>
-                    <span className="font-medium">{mockProduct.shipping.returns}</span>
+                    <span className="font-medium">{product.shipping?.returns || "-"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -283,7 +271,7 @@ export default function ProductDetailPage() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">{mockProduct.description}</p>
+              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
             </CardContent>
           </Card>
 
@@ -294,7 +282,7 @@ export default function ProductDetailPage() {
             </CardHeader>
             <CardContent>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {mockProduct.features.map((feature, index) => (
+                {product.features?.map((feature: string, index: number) => (
                   <li key={index} className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-primary rounded-full" />
                     <span>{feature}</span>
@@ -311,7 +299,7 @@ export default function ProductDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(mockProduct.specifications).map(([key, value]) => (
+                {product.specifications && Object.entries(product.specifications).map(([key, value]) => (
                   <div key={key} className="flex justify-between py-2 border-b border-border last:border-0">
                     <span className="text-muted-foreground">{key}</span>
                     <span className="font-medium">{value}</span>
@@ -326,21 +314,24 @@ export default function ProductDetailPage() {
             <CardHeader>
               <CardTitle>Customer Reviews</CardTitle>
               <CardDescription>
-                {mockProduct.reviews} reviews with an average rating of {mockProduct.rating} stars
+                {reviews.length} reviews with an average rating of {product.rating || "-"} stars
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {mockReviews.map((review) => (
-                  <div key={review.id} className="space-y-2">
+          
+                {reviews.length === 0 ? (
+                  <div>No reviews yet.</div>
+                ) : reviews.map((review: any) => (
+                  <div key={review._id} className="space-y-2">
                     <div className="flex items-center gap-3">
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={review.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>{review.user[0]}</AvatarFallback>
+                        <AvatarImage src={review.buyer?.avatar || "/placeholder.svg"} />
+                        <AvatarFallback>{review.buyer?.name?.[0]}</AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{review.user}</span>
+                          <span className="font-medium">{review.buyer?.name || "User"}</span>
                           <div className="flex">
                             {[...Array(5)].map((_, i) => (
                               <Star
@@ -352,7 +343,7 @@ export default function ProductDetailPage() {
                             ))}
                           </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">{review.date}</span>
+                        <span className="text-sm text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                     <p className="text-muted-foreground ml-11">{review.comment}</p>
@@ -360,6 +351,34 @@ export default function ProductDetailPage() {
                   </div>
                 ))}
               </div>
+              {/* Add Review Form */}
+              <form className="mt-8 space-y-4" onSubmit={handleReviewSubmit}>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Your Rating:</span>
+                  {[1,2,3,4,5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      onClick={() => setReviewRating(star)}
+                      className="focus:outline-none"
+                    >
+                      <Star className={`h-5 w-5 ${star <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="w-full border rounded p-2"
+                  rows={3}
+                  placeholder="Write your review..."
+                  value={reviewText}
+                  onChange={e => setReviewText(e.target.value)}
+                  required
+                />
+                <Button type="submit" disabled={reviewLoading}>
+                  {reviewLoading ? "Submitting..." : "Submit Review"}
+                </Button>
+                {error && <div className="text-red-500">{error}</div>}
+              </form>
             </CardContent>
           </Card>
         </div>
