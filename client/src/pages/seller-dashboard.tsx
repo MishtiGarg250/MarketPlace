@@ -97,6 +97,7 @@ export default function SellerDashboardPage() {
           setProducts([])
         }
       } catch (err) {
+        console.log(err)
         setError("Failed to fetch seller data")
       }
       setLoading(false)

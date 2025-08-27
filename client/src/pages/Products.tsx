@@ -9,7 +9,11 @@ import { Slider } from "@/components/ui/slider"
 import { Star, Heart, Filter, Grid, List, Search } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 
-import api from "@/api/api"
+import api, { addFavorite, removeFavorite, getFavorites } from "@/api/api"
+
+ 
+  // Fetch favorites on mount
+ 
 
 
 const categories = ["All", "Electronics", "Fashion", "Food", "Home", "Beauty"]
@@ -24,6 +28,29 @@ const sortOptions = [
 
 
 export default function ProductsPage() {
+   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+
+   useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const res = await getFavorites();
+        setFavoriteIds(res.data.favorites.map((fav: any) => fav._id));
+      } catch {
+        setFavoriteIds([]);
+      }
+    };
+    fetchFavorites();
+  }, []);
+
+  const handleToggleFavorite = async (productId: string) => {
+    if (favoriteIds.includes(productId)) {
+      await removeFavorite(productId);
+      setFavoriteIds(favoriteIds.filter(id => id !== productId));
+    } else {
+      await addFavorite(productId);
+      setFavoriteIds([...favoriteIds, productId]);
+    }
+  };
   const { addItem } = useCart()
 
   const [products, setProducts] = useState<any[]>([])
@@ -41,9 +68,10 @@ export default function ProductsPage() {
       setLoading(true)
       try {
         const res = await api.get("/products?limit=100")
-        // API returns { page, limit, products }
+        
         setProducts(res.data.products || [])
       } catch (err) {
+        console.error(err)
         setProducts([])
       } finally {
         setLoading(false)
@@ -244,8 +272,10 @@ export default function ProductsPage() {
                       size="sm"
                       variant="ghost"
                       className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                      onClick={() => handleToggleFavorite(product.id)}
+                      aria-label={favoriteIds.includes(product.id) ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <Heart className="h-4 w-4" />
+                      <Heart className={`h-4 w-4 ${favoriteIds.includes(product.id) ? "fill-red-500 text-red-500" : ""}`} />
                     </Button>
                     <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
                       {product.category}
@@ -299,8 +329,10 @@ export default function ProductsPage() {
                         size="sm"
                         variant="ghost"
                         className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                        onClick={() => handleToggleFavorite(product.id)}
+                        aria-label={favoriteIds.includes(product.id) ? "Remove from favorites" : "Add to favorites"}
                       >
-                        <Heart className="h-4 w-4" />
+                        <Heart className={`h-4 w-4 ${favoriteIds.includes(product.id) ? "fill-red-500 text-red-500" : ""}`} />
                       </Button>
                     </div>
                     <div className="flex-1">

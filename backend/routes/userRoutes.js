@@ -5,6 +5,11 @@ const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/auth");
 const { getProfile } = require("../controllers/userController");
+const favoriteController = require("../controllers/favoriteController");
+// Favorite products
+router.post("/favorites/add", protect, favoriteController.addFavorite);
+router.post("/favorites/remove", protect, favoriteController.removeFavorite);
+router.get("/favorites", protect, favoriteController.getFavorites);
 const { register, login } = require("../controllers/authController");
 
 router.post("/register", register);

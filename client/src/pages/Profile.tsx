@@ -1,7 +1,4 @@
-"use client"
 
-import { useState, useEffect } from "react"
-import api from "../api/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,10 +7,10 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, Package, Heart, Settings, MapPin, Calendar, Edit } from "lucide-react"
-
-
-
+import { Package, Heart, Settings, MapPin, Calendar, Edit } from "lucide-react"
+import { useState, useEffect } from "react"
+import api, { getFavorites, removeFavorite } from "../api/api"
+import { Card as ProductCard, CardContent as ProductCardContent, CardTitle as ProductCardTitle, CardDescription as ProductCardDescription } from "@/components/ui/card";
 
 
 export default function ProfilePage() {
@@ -28,6 +25,27 @@ export default function ProfilePage() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  // Fetch favorites when tab is loaded
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await getFavorites();
+      setFavorites(res.data.favorites || []);
+    } catch {
+      setFavorites([]);
+    }
+  };
+
+  const handleRemoveFavorite = async (productId: string) => {
+    await removeFavorite(productId);
+    setFavorites(favorites.filter((p) => p._id !== productId));
+  };
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,7 +61,8 @@ export default function ProfilePage() {
           phone: res.data.user.contact || "",
           location: res.data.user.location || "",
         })
-      } catch (err: any) {
+      } catch (err) {
+        console.log(err)
         setError("Failed to load profile")
       }
       setLoading(false)
@@ -54,7 +73,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setError("")
     try {
-      // TODO: Implement PUT /users/me in backend if not present
+      
       await api.put("/users/me", {
         name: formData.name,
         email: formData.email,
@@ -169,7 +188,7 @@ export default function ProfilePage() {
                               </div>
                             </div>
                             <div className="space-y-2">
-                              {order.items && order.items.length > 0 ? order.items.map((item: any) => (
+                              {order.items && order.items.length > 0 ? order.items.map((item:any) => (
                                 <div key={item._id} className="flex items-center gap-4 border-b pb-2 last:border-b-0">
                                   <img
                                     src={item.productId?.images?.[0]?.url || "/placeholder.svg"}
@@ -196,7 +215,53 @@ export default function ProfilePage() {
               </TabsContent>
 
             
-              {/* Favorites tab can be implemented if backend supports it */}
+
+              <TabsContent value="favorites" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Favorites</CardTitle>
+                    <CardDescription>Your favorite products</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {favorites.length === 0 ? (
+                        <div className="text-muted-foreground col-span-full">No favorite products yet.</div>
+                      ) : favorites.map((product) => (
+                        <ProductCard key={product._id} className="group hover:shadow-lg transition-shadow">
+                          <ProductCardContent className="p-4">
+                            <div className="relative">
+                              <a href={`/products/${product._id}`}>
+                                <img
+                                  src={product.images?.[0]?.url || "/placeholder.svg"}
+                                  alt={product.name}
+                                  className="w-full h-40 object-cover rounded-lg mb-2"
+                                />
+                                <ProductCardTitle className="text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                                  {product.name}
+                                </ProductCardTitle>
+                              </a>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                                onClick={() => handleRemoveFavorite(product._id)}
+                                aria-label="Remove from favorites"
+                              >
+                                <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+                              </Button>
+                            </div>
+                            <ProductCardDescription className="mb-2">{product.category}</ProductCardDescription>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xl font-bold text-primary">${product.price}</span>
+                              <span className="text-sm text-muted-foreground">{product.condition}</span>
+                            </div>
+                          </ProductCardContent>
+                        </ProductCard>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
               
               <TabsContent value="settings" className="space-y-4">

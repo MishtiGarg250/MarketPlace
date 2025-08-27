@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -14,7 +15,8 @@ const userSchema = new mongoose.Schema({
   joinDate: { type: Date, default: Date.now },
   totalOrders: { type: Number, default: 0 },
   totalSpent: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 });
 
 // Password compare
