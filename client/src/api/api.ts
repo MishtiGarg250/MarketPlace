@@ -1,4 +1,22 @@
-// Favorite API helpers
+
+export const uploadProductImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  // Use axios directly to set multipart headers
+  const raw = localStorage.getItem('auth');
+  const headers: Record<string, string> = { 'Content-Type': 'multipart/form-data' };
+  if (raw) {
+    try {
+      const { token } = JSON.parse(raw);
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+    } catch(err){
+      console.log(err)
+    }
+  }
+  const res = await api.post('/products/upload', formData, { headers });
+  return res.data;
+};
+
 export const addFavorite = (productId: string) => api.post('/users/favorites/add', { productId });
 export const removeFavorite = (productId: string) => api.post('/users/favorites/remove', { productId });
 export const getFavorites = () => api.get('/users/favorites');

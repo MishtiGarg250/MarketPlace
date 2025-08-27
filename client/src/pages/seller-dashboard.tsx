@@ -29,6 +29,9 @@ import {
 
 
 
+
+import { uploadProductImage } from "../api/api";
+
 export default function SellerDashboardPage() {
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [products, setProducts] = useState<any[]>([])
@@ -44,6 +47,9 @@ export default function SellerDashboardPage() {
     condition: "New",
     location: "",
   })
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [productImageUrls, setProductImageUrls] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [user, setUser] = useState<any>(null)
   const [sellerProfile, setSellerProfile] = useState<any>(null)
   const [analytics, setAnalytics] = useState<any>(null)
@@ -120,8 +126,20 @@ export default function SellerDashboardPage() {
   }
 
   const handleAddProduct = async () => {
-    setError("")
+    setError("");
     try {
+      let imageArr: { url: string }[] = [];
+      if (productImages.length > 0) {
+        setUploadingImage(true);
+        const uploadResults = await Promise.all(
+          productImages.map(async (file) => {
+            const uploadRes = await uploadProductImage(file);
+            return uploadRes && uploadRes.url ? { url: uploadRes.url } : null;
+          })
+        );
+        setUploadingImage(false);
+        imageArr = uploadResults.filter(Boolean) as { url: string }[];
+      }
       const payload = {
         name: newProduct.name,
         description: newProduct.description,
@@ -130,9 +148,10 @@ export default function SellerDashboardPage() {
         category: newProduct.category,
         condition: newProduct.condition,
         location: newProduct.location,
-      }
-      await api.post("/products", payload)
-      setShowAddProduct(false)
+        images: imageArr,
+      };
+      await api.post("/products", payload);
+      setShowAddProduct(false);
       setNewProduct({
         name: "",
         description: "",
@@ -141,16 +160,19 @@ export default function SellerDashboardPage() {
         category: "",
         condition: "New",
         location: "",
-      })
+      });
+      setProductImages([]);
+      setProductImageUrls([]);
       // Refresh products for this seller
       if (user?._id) {
-        const res = await api.get(`/products?sellerId=${user._id}&limit=100`)
-        setProducts(res.data.products)
+        const res = await api.get(`/products?sellerId=${user._id}&limit=100`);
+        setProducts(res.data.products);
       }
     } catch (err: any) {
-      setError("Failed to add product")
+      setError("Failed to add product");
+      setUploadingImage(false);
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -651,9 +673,34 @@ export default function SellerDashboardPage() {
                     placeholder="Enter location"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="product-images">Product Images (up to 5)</Label>
+                  <Input
+                    id="product-images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={async (e) => {
+                      if (e.target.files) {
+                        const newFiles = Array.from(e.target.files);
+                        // Append to existing, but max 5
+                        const combined = [...productImages, ...newFiles].slice(0, 5);
+                        setProductImages(combined);
+                        setProductImageUrls(combined.map(f => URL.createObjectURL(f)));
+                      }
+                    }}
+                  />
+                  {productImageUrls.length > 0 && (
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {productImageUrls.map((url, idx) => (
+                        <img key={idx} src={url} alt={`Preview ${idx + 1}`} className="w-24 h-24 object-cover rounded" />
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2 pt-4">
-                  <Button onClick={handleAddProduct} className="flex-1">
-                    Add Product
+                  <Button onClick={handleAddProduct} className="flex-1" disabled={uploadingImage}>
+                    {uploadingImage ? "Uploading..." : "Add Product"}
                   </Button>
                   <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">
                     Cancel

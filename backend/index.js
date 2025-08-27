@@ -37,14 +37,14 @@ io.on("connection", (socket) => {
 
 connectDB();
 
+
 app.use(cors());
 app.use(bodyParser.json());
 
-//api routes
 
+//api routes
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
-
 app.use("/api/cart", cartRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use('/api/search', searchRoutes);
@@ -61,6 +61,15 @@ app.use('/api/stripe', (req, res, next) => {
 });
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Error handling middleware: always return JSON
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+    details: err.stack || err
+  });
+});
 
 
 const PORT = process.env.PORT || 5000;

@@ -8,12 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Star, Heart, Filter, Grid, List, Search } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
-
 import api, { addFavorite, removeFavorite, getFavorites } from "@/api/api"
 
- 
-  // Fetch favorites on mount
- 
 
 
 const categories = ["All", "Electronics", "Fashion", "Food", "Home", "Beauty"]

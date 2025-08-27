@@ -2,9 +2,8 @@
 const express = require("express");
 const router = express.Router();
 const {protect, authorize} = require("../middleware/auth");
-const multer = require("multer");
-const path = require("path");
-
+const { getSellerAnalytics, getSellerOrders } = require("../controllers/sellerController");
+const upload = require("../config/multer");
 const{
     createProduct,
     getProducts,
@@ -13,17 +12,18 @@ const{
     markFeatured
 } = require("../controllers/productController");
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "uploads/"); // folder must exist
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+router.post("/upload", protect, authorize("seller"), (req, res, next) => {
+    upload.single("image")(req, res, function (err) {
+        if (err) {
+            console.error("Multer/Cloudinary error:", err);
+            return res.status(500).json({ error: err.message || err.toString() });
+        }
+        if (!req.file || !req.file.path) {
+            return res.status(400).json({ msg: "No image uploaded" });
+        }
+        res.json({ url: req.file.path });
+    });
 });
-
-const upload = multer({ storage });
-
 
 router.get("/", getProducts);
 router.post("/", protect, authorize("seller"), createProduct); 
@@ -31,8 +31,6 @@ router.put("/:id", protect, authorize("seller"), updateProduct);
 router.delete("/:id", protect, authorize("seller"), deleteProduct);
 router.put("/:id/feature", protect, authorize("seller"), markFeatured);
 
-// Seller analytics and orders endpoints
-const { getSellerAnalytics, getSellerOrders } = require("../controllers/sellerController");
 router.get("/seller/:sellerId/analytics", getSellerAnalytics);
 router.get("/seller/:sellerId/orders", getSellerOrders);
 

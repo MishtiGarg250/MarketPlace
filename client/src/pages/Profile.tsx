@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("")
   const [favorites, setFavorites] = useState<any[]>([]);
 
-  // Fetch favorites when tab is loaded
+  
   useEffect(() => {
     fetchFavorites();
   }, []);

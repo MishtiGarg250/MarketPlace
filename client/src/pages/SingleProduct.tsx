@@ -32,6 +32,7 @@ export default function ProductDetailPage() {
         const res = await api.get(`/products?id=${id}`);
         setProduct(res.data.products[0]);
       } catch (err) {
+        console.log(err);
         setError("Failed to load product");
       }
     };
@@ -40,6 +41,7 @@ export default function ProductDetailPage() {
         const res = await api.get(`/reviews/product/${id}`);
         setReviews(res.data);
       } catch (err) {
+        console.log(err)
         setReviews([]);
       }
     };
@@ -81,6 +83,7 @@ export default function ProductDetailPage() {
       setReviews(res.data);
       console.log(reviews);
     } catch (err) {
+      console.log(err);
       setError("Failed to submit review");
     }
     setReviewLoading(false);
