@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react"
 
 import { useCart } from "@/contexts/cart-context"
+import api from "../api/api"
 export default function CartPage(){
     const {state,removeItem,updateQuantity,clearCart}=useCart();
     const [isLoading,setIsLoading]=useState(false);
@@ -30,12 +31,21 @@ export default function CartPage(){
     }
     }
 
-    const handleCheckout= ()=>{
-        setIsLoading(true);
-        setTimeout(()=>{
-            setIsLoading(false);
-            window.location.href="/checkout"
-        },1000)
+
+    const handleCheckout = async () => {
+      setIsLoading(true);
+      try {
+        const res = await api.post("/stripe/stripe-session");
+        if (res.data && res.data.url) {
+          window.location.href = res.data.url;
+        } else {
+          alert("Failed to start checkout session.");
+        }
+      } catch (err) {
+        console.log(err);
+        alert("Checkout error. Please try again.");
+      }
+      setIsLoading(false);
     }
 
    if (state.items.length === 0) {

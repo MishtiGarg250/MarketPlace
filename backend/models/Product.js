@@ -7,6 +7,8 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   SKU: { type: String, unique: true },
   category: String,
+  condition: { type: String, enum: ['New', 'Used'], default: 'New' },
+  location: String,
   images: [
         {
             url: { type: String },
@@ -15,6 +17,8 @@ const productSchema = new mongoose.Schema({
     ],
   quantity: { type: Number, default: 1 },
   isFeatured: { type: Boolean, default: false },
+  rating: { type: Number, min: 0, max: 5, default: 0 },
+  reviews: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 

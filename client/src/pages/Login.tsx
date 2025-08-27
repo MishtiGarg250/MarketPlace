@@ -2,6 +2,8 @@
 
 import type React from "react"
 import { useState } from "react"
+import api from "../api/api"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,18 +13,32 @@ import { Link} from "react-router-dom"
 
 
 
-export default function Login() {
 
+export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     setError(null);
-   
+    try {
+      const res = await api.post("/users/login", {
+        email: formData.email,
+        password: formData.password
+      });
+      // Get user info from token (or fetch profile if needed)
+      const token = res.data.token;
+      // Decode token to get user info (or fetch /me)
+      // For now, just store token and email
+      localStorage.setItem("auth", JSON.stringify({ token, user: { email: formData.email } }));
+      navigate("/");
+    } catch (err: any) {
+      setError(err.response?.data?.msg || "Login failed");
+    }
   }
 
   return (

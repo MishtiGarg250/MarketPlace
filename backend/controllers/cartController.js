@@ -3,26 +3,26 @@ const Product = require("../models/Product");
 
 
 exports.addToCart = async(req,res)=>{
-    try{
-        const {productId, quantity} = req.body;
-        if(!product) return res.status(404).json({msg:"Product not found"});
-        let cartItem = await Cart.findOne({userId:req.user._id, productId});
-        if(cartItem){
-            cartItem.quantity += quantity || 1;
+  try{
+    const {productId, quantity} = req.body;
+    const product = await Product.findById(productId);
+    if(!product) return res.status(404).json({msg:"Product not found"});
+    let cartItem = await Cart.findOne({userId:req.user._id, productId});
+    if(cartItem){
+      cartItem.quantity += quantity || 1;
       await cartItem.save();
-        }else{
-                  cartItem = await Cart.create({
+    }else{
+      cartItem = await Cart.create({
         userId: req.user._id,
         productId,
         quantity: quantity || 1,
       });
-
-        }
-        res.status(201).json(cartItem);
-    }catch(err){
-        console.log(err);
-        res.status(500).json({msg:"Internal server error"});
     }
+    res.status(201).json(cartItem);
+  }catch(err){
+    console.log(err);
+    res.status(500).json({msg:"Internal server error"});
+  }
 }
 
 exports.getCart = async(req,res)=>{

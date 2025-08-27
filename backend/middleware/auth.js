@@ -19,10 +19,16 @@ const protect = async(req,res,next)=>{
     }
 }
 
-const authorize = (...roles)=>{
-    return (req,res,next)=>{
-        if(!roles.includes(req.user.role)) return res.status(401).json({msg:"Not authorized to access this route"})
-        next()
+
+const authorize = (...roles) => {
+    return (req, res, next) => {
+        const userRole = req.user.role;
+        // Allow case-insensitive match for roles
+        const allowed = roles.some(role => role.toLowerCase() === userRole?.toLowerCase());
+        if (!allowed) return res.status(401).json({ msg: "Not authorized to access this route" });
+        next();
     }
 }
+
+module.exports = { protect, authorize };
 

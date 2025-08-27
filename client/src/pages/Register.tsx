@@ -1,6 +1,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import api from "../api/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,16 +12,36 @@ import { Link } from "react-router-dom"
 
 export default function Register() {
   
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
+    role: "buyer"
   })
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-   
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    try {
+      const res = await api.post("/users/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
+      });
+      setSuccess("Account created! Please login.");
+    } catch (err: any) {
+      setError(err.response?.data?.msg || "Registration failed");
+    }
   }
 
   return (
@@ -54,7 +75,14 @@ export default function Register() {
             </div>
           </div>
 
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="text-red-600 text-sm mb-2" role="alert">{error}</div>
+            )}
+            {success && (
+              <div className="text-green-600 text-sm mb-2" role="alert">{success}</div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
                 Full Name
@@ -69,7 +97,6 @@ export default function Register() {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Email Address
@@ -84,7 +111,22 @@ export default function Register() {
                 required
               />
             </div>
-
+            <div className="space-y-2">
+              <Label htmlFor="role" className="text-sm font-medium">
+                Role
+              </Label>
+              <select
+                id="role"
+                value={formData.role}
+                onChange={e => setFormData({ ...formData, role: e.target.value })}
+                className="h-11 w-full border rounded px-2"
+                required
+              >
+                <option value="buyer">Buyer</option>
+                <option value="seller">Seller</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
                 Password
@@ -99,7 +141,6 @@ export default function Register() {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-sm font-medium">
                 Confirm Password
@@ -114,7 +155,6 @@ export default function Register() {
                 required
               />
             </div>
-
             <Button
               type="submit"
               className="w-full h-11 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"

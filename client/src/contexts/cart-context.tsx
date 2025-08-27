@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
+import api from "../api/api"
 import { ASSIGNMENT_SEED, calculatePlatformFee } from "@/utils/seedUtils"
 
 export interface CartItem {
@@ -129,35 +130,160 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   })
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("marketplace-cart")
-    if (savedCart) {
+    // Fetch cart from backend if logged in
+    const fetchCart = async () => {
+      const raw = localStorage.getItem("auth")
+      if (!raw) return
       try {
-        const cartItems = JSON.parse(savedCart)
+        const res = await api.get("/cart")
+        // Map backend cart to CartItem[]
+        const cartItems = (res.data || []).map((item: any) => ({
+          id: item.productId._id,
+          title: item.productId.name,
+          price: item.productId.price,
+          image: item.productId.images?.[0]?.url || "",
+          seller: item.productId.sellerId || "",
+          category: item.productId.category || "",
+          quantity: item.quantity,
+          stock: 99 // TODO: get real stock if available
+        }))
         dispatch({ type: "LOAD_CART", payload: cartItems })
       } catch (error) {
-        console.error("Failed to load cart from localStorage:", error)
+        // fallback: load from localStorage for guests
+        const savedCart = localStorage.getItem("marketplace-cart")
+        if (savedCart) {
+          try {
+            const cartItems = JSON.parse(savedCart)
+            dispatch({ type: "LOAD_CART", payload: cartItems })
+          } catch (error) {
+            console.error("Failed to load cart from localStorage:", error)
+          }
+        }
       }
     }
+    fetchCart()
   }, [])
 
   useEffect(() => {
     localStorage.setItem("marketplace-cart", JSON.stringify(state.items))
   }, [state.items])
 
-  const addItem = (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
-    dispatch({ type: "ADD_ITEM", payload: item })
+  const addItem = async (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
+    const raw = localStorage.getItem("auth")
+    if (raw) {
+      // Logged in: sync with backend
+      try {
+        await api.post("/cart", { productId: item.id, quantity: item.quantity || 1 })
+        // Refetch cart
+        const res = await api.get("/cart")
+        const cartItems = (res.data || []).map((item: any) => ({
+          id: item.productId._id,
+          title: item.productId.name,
+          price: item.productId.price,
+          image: item.productId.images?.[0]?.url || "",
+          seller: item.productId.sellerId || "",
+          category: item.productId.category || "",
+          quantity: item.quantity,
+          stock: 99
+        }))
+        dispatch({ type: "LOAD_CART", payload: cartItems })
+      } catch (error) {
+        // fallback: local
+        dispatch({ type: "ADD_ITEM", payload: item })
+      }
+    } else {
+      dispatch({ type: "ADD_ITEM", payload: item })
+    }
   }
 
-  const removeItem = (id: number) => {
-    dispatch({ type: "REMOVE_ITEM", payload: id })
+  const removeItem = async (id: number) => {
+    const raw = localStorage.getItem("auth")
+    if (raw) {
+      try {
+        // Find cart item by productId
+        const res = await api.get("/cart")
+        const cartItem = (res.data || []).find((item: any) => item.productId._id === id)
+        if (cartItem) {
+          await api.delete(`/cart/${cartItem._id}`)
+        }
+        // Refetch cart
+        const res2 = await api.get("/cart")
+        const cartItems = (res2.data || []).map((item: any) => ({
+          id: item.productId._id,
+          title: item.productId.name,
+          price: item.productId.price,
+          image: item.productId.images?.[0]?.url || "",
+          seller: item.productId.sellerId || "",
+          category: item.productId.category || "",
+          quantity: item.quantity,
+          stock: 99
+        }))
+        dispatch({ type: "LOAD_CART", payload: cartItems })
+      } catch (error) {
+        dispatch({ type: "REMOVE_ITEM", payload: id })
+      }
+    } else {
+      dispatch({ type: "REMOVE_ITEM", payload: id })
+    }
   }
 
-  const updateQuantity = (id: number, quantity: number) => {
-    dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
+  const updateQuantity = async (id: number, quantity: number) => {
+    const raw = localStorage.getItem("auth")
+    if (raw) {
+      try {
+        // Find cart item by productId
+        const res = await api.get("/cart")
+        const cartItem = (res.data || []).find((item: any) => item.productId._id === id)
+        if (cartItem) {
+          await api.put(`/cart/${cartItem._id}`, { quantity })
+        }
+        // Refetch cart
+        const res2 = await api.get("/cart")
+        const cartItems = (res2.data || []).map((item: any) => ({
+          id: item.productId._id,
+          title: item.productId.name,
+          price: item.productId.price,
+          image: item.productId.images?.[0]?.url || "",
+          seller: item.productId.sellerId || "",
+          category: item.productId.category || "",
+          quantity: item.quantity,
+          stock: 99
+        }))
+        dispatch({ type: "LOAD_CART", payload: cartItems })
+      } catch (error) {
+        dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
+      }
+    } else {
+      dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
+    }
   }
 
-  const clearCart = () => {
-    dispatch({ type: "CLEAR_CART" })
+  const clearCart = async () => {
+    const raw = localStorage.getItem("auth")
+    if (raw) {
+      try {
+        // Remove all items from backend cart
+        const res = await api.get("/cart")
+        await Promise.all((res.data || []).map((item: any) => api.delete(`/cart/${item._id}`)))
+        // Refetch cart
+        const res2 = await api.get("/cart")
+        const cartItems = (res2.data || []).map((item: any) => ({
+          id: item.productId._id,
+          title: item.productId.name,
+          price: item.productId.price,
+          image: item.productId.images?.[0]?.url || "",
+          seller: item.productId.sellerId || "",
+          category: item.productId.category || "",
+          quantity: item.quantity,
+          stock: 99
+        }))
+        dispatch({ type: "LOAD_CART", payload: cartItems })
+      } catch (error) {
+        dispatch({ type: "CLEAR_CART" })
+      }
+    } else {
+      dispatch({ type: "CLEAR_CART" })
+    }
   }
 
   return (

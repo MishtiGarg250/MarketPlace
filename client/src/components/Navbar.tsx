@@ -23,21 +23,37 @@ export default function Header() {
     console.log(err);
   }
 
-  const navItems = [
-    { name: "Dashboard", href: "/dashboard", id: "dashboard" },
-    { name: "Problems", href: "/problems", id: "problems" },
-    {name: "Daily Logs", href:"/dailylogs", id:"dailylogs"}
-  ]
 
-  const getActiveItem = () => {
-    const path = location.pathname
-    if (path.includes("/dashboard")) return "dashboard"
-    if (path.includes("/problems")) return "problems"
-    if(path.includes("/dailylogs")) return "dailylogs"
-    return ""
+  // Role-based nav items
+  let navItems = [
+    { name: "Home", href: "/", id: "home" },
+    { name: "Products", href: "/products", id: "products" },
+    { name: "Cart", href: "/cart", id: "cart" },
+    { name: "Profile", href: "/profile", id: "profile" },
+  ];
+  if (user?.role === "admin") {
+    navItems = [
+      { name: "Admin Dashboard", href: "/admin", id: "admin" },
+      ...navItems
+    ];
+  } else if (user?.role === "seller") {
+    navItems = [
+      { name: "Seller Dashboard", href: "/seller-dashboard", id: "seller-dashboard" },
+      ...navItems
+    ];
   }
 
-  const activeItem = getActiveItem()
+
+  const getActiveItem = () => {
+    const path = location.pathname;
+    for (const item of navItems) {
+      if (path === item.href || path.startsWith(item.href + "/")) {
+        return item.id;
+      }
+    }
+    return "";
+  };
+  const activeItem = getActiveItem();
 
   const handleSignOut = () => {
     localStorage.removeItem("auth");
@@ -93,7 +109,7 @@ export default function Header() {
             {/* User Auth */}
             {isAuthenticated ? (
               <div className="hidden md:flex gap-2 items-center">
-                <span className="font-semibold text-primary px-2">{user?.name || user?.email || "User"}</span>
+                <span className="font-semibold text-primary px-2">{user?.name || user?.email || "User"} {user?.role && <span className="text-xs text-muted-foreground">({user.role})</span>}</span>
                 <Button
                   variant="outline"
                   onClick={handleSignOut}

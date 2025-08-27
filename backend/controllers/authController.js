@@ -6,8 +6,13 @@ exports.register = async (req, res) => {
   const { name, email, password, role } = req.body;
   const passwordHash = await bcrypt.hash(password, 10);
 
+  // Set type field for consistency with role
+  let type = 'Buyer';
+  if (role === 'seller') type = 'Seller';
+  if (role === 'admin') type = 'Admin';
+
   try {
-    const user = await User.create({ name, email, passwordHash, role });
+    const user = await User.create({ name, email, passwordHash, role, type });
     res.status(201).json({ msg: 'User created', userId: user._id });
   } catch (err) {
     res.status(400).json({ msg: err.message });
@@ -24,7 +29,7 @@ exports.login = async (req, res) => {
 
   const token = jwt.sign(
     { id: user._id, role: user.role },
-    process.env.ASSIGNMENT_SEED,
+    process.env.JWT_SECRET,
     { expiresIn: '1d' }
   );
 

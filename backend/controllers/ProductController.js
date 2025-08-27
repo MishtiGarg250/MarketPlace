@@ -1,5 +1,5 @@
-const product = require("../models/Product")
-const generateSKU = require("../utils/generateSKU")
+const Product = require("../models/Product")
+const generateSKU = require("../utils/skuGenerator")
 
 const createProduct = async(req,res)=>{
     try{
@@ -11,8 +11,8 @@ const createProduct = async(req,res)=>{
                 alt: file.originalname
             }))
         }
-        const product = new product({
-            seller: req.user.id,
+        const product = new Product({
+            sellerId: req.user.id,
             name,
             description,
             category,
@@ -33,23 +33,29 @@ const createProduct = async(req,res)=>{
 
 
 
-const getProducts = async(req,res)=>{
-    try{
+const getProducts = async (req, res) => {
+    try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const skip = (page -1 )*limit;
+        const skip = (page - 1) * limit;
 
-        const products = await product.find()
-        .skip(skip)
-        .limit(limit)
-        .sort({createdAt: -1})
+        // Allow filtering by sellerId
+        const filter = {};
+        if (req.query.sellerId) {
+            filter.sellerId = req.query.sellerId;
+        }
 
-        res.json({page, limit,products})
-    }catch(err){
+        const products = await Product.find(filter)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        res.json({ page, limit, products });
+    } catch (err) {
         console.error(err);
-        res.status(500).json({message: "Server error"})
+        res.status(500).json({ message: "Server error" });
     }
-}
+};
 
 
 const updateProduct = async (req, res) => {
@@ -109,7 +115,7 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-exports.markFeatured = async(req,res)=>{
+const markFeatured = async(req,res)=>{
     try{
         const product = await Product.findByIdAndUpdate(
             req.params.id,

@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,113 +9,8 @@ import { Slider } from "@/components/ui/slider"
 import { Star, Heart, Filter, Grid, List, Search } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 
-// Mock product data
-const mockProducts = [
-  {
-    id: 1,
-    title: "Wireless Headphones",
-    price: 99.99,
-    image: "/wireless-headphones.png",
-    rating: 4.5,
-    reviews: 128,
-    seller: "TechStore",
-    category: "Electronics",
-    condition: "New",
-    location: "New York",
-    description: "High-quality wireless headphones with noise cancellation",
-  },
-  {
-    id: 2,
-    title: "Vintage Leather Jacket",
-    price: 149.99,
-    image: "/vintage-leather-jacket.png",
-    rating: 4.8,
-    reviews: 89,
-    seller: "FashionHub",
-    category: "Fashion",
-    condition: "Used",
-    location: "California",
-    description: "Authentic vintage leather jacket in excellent condition",
-  },
-  {
-    id: 3,
-    title: "Smart Home Speaker",
-    price: 79.99,
-    image: "/smart-home-speaker.png",
-    rating: 4.3,
-    reviews: 256,
-    seller: "SmartTech",
-    category: "Electronics",
-    condition: "New",
-    location: "Texas",
-    description: "Voice-controlled smart speaker with premium sound",
-  },
-  {
-    id: 4,
-    title: "Artisan Coffee Beans",
-    price: 24.99,
-    image: "/artisan-coffee-beans.png",
-    rating: 4.9,
-    reviews: 67,
-    seller: "CoffeeCraft",
-    category: "Food",
-    condition: "New",
-    location: "Oregon",
-    description: "Premium single-origin coffee beans, freshly roasted",
-  },
-  {
-    id: 5,
-    title: "Gaming Mechanical Keyboard",
-    price: 129.99,
-    image: "/gaming-mechanical-keyboard.png",
-    rating: 4.6,
-    reviews: 194,
-    seller: "GameGear",
-    category: "Electronics",
-    condition: "New",
-    location: "Washington",
-    description: "RGB mechanical keyboard with custom switches",
-  },
-  {
-    id: 6,
-    title: "Handmade Ceramic Vase",
-    price: 45.99,
-    image: "/handmade-ceramic-vase.png",
-    rating: 4.7,
-    reviews: 34,
-    seller: "ArtisanCrafts",
-    category: "Home",
-    condition: "New",
-    location: "Colorado",
-    description: "Beautiful handcrafted ceramic vase with unique glaze",
-  },
-  {
-    id: 7,
-    title: "Professional Camera Lens",
-    price: 299.99,
-    image: "/professional-camera-lens.png",
-    rating: 4.4,
-    reviews: 78,
-    seller: "PhotoPro",
-    category: "Electronics",
-    condition: "Used",
-    location: "Florida",
-    description: "50mm f/1.8 lens in excellent working condition",
-  },
-  {
-    id: 8,
-    title: "Organic Skincare Set",
-    price: 89.99,
-    image: "/organic-skincare-set.png",
-    rating: 4.8,
-    reviews: 156,
-    seller: "NaturalBeauty",
-    category: "Beauty",
-    condition: "New",
-    location: "Vermont",
-    description: "Complete organic skincare routine with natural ingredients",
-  },
-]
+import api from "@/api/api"
+
 
 const categories = ["All", "Electronics", "Fashion", "Food", "Home", "Beauty"]
 const conditions = ["All","New","Used"]
@@ -127,9 +22,12 @@ const sortOptions = [
   { value: "popular", label: "Most Popular" },
 ]
 
+
 export default function ProductsPage() {
   const { addItem } = useCart()
 
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedCondition, setSelectedCondition] = useState("All")
@@ -138,19 +36,48 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true)
+      try {
+        const res = await api.get("/products?limit=100")
+        // API returns { page, limit, products }
+        setProducts(res.data.products || [])
+      } catch (err) {
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
   const filteredProducts = useMemo(() => {
-    const filtered = mockProducts.filter((product) => {
+    let filtered = products.map((product) => ({
+      id: product._id,
+      title: product.name,
+      price: product.price,
+      image: product.images?.[0]?.url || "",
+      rating: product.rating || 0,
+      reviews: product.reviews || 0,
+      seller: product.sellerId?.name || product.sellerId || "",
+      category: product.category || "",
+      condition: product.condition || "New",
+      location: product.location || "",
+      description: product.description || "",
+      stock: product.quantity || 0,
+    }))
+
+    filtered = filtered.filter((product) => {
       const matchesSearch =
         product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesCategory = selectedCategory === "All" || product.category === selectedCategory
       const matchesCondition = selectedCondition === "All" || product.condition === selectedCondition
       const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
-
       return matchesSearch && matchesCategory && matchesCondition && matchesPrice
     })
 
-    // Sort products
     switch (sortBy) {
       case "price-low":
         filtered.sort((a, b) => a.price - b.price)
@@ -165,14 +92,13 @@ export default function ProductsPage() {
         filtered.sort((a, b) => b.reviews - a.reviews)
         break
       default:
-        // newest first (default order)
+        filtered.sort((a, b) => 0)
         break
     }
-
     return filtered
-  }, [searchQuery, selectedCategory, selectedCondition, priceRange, sortBy])
+  }, [products, searchQuery, selectedCategory, selectedCondition, priceRange, sortBy])
 
-  const handleAddToCart = (product: (typeof mockProducts)[0]) => {
+  const handleAddToCart = (product: any) => {
     addItem({
       id: product.id,
       title: product.title,
@@ -180,7 +106,7 @@ export default function ProductsPage() {
       image: product.image,
       seller: product.seller,
       category: product.category,
-      stock: 50, // Default stock for demo
+      stock: product.stock,
     })
   }
 
@@ -292,12 +218,16 @@ export default function ProductsPage() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredProducts.length} of {mockProducts.length} products
+            Showing {filteredProducts.length} of {products.length} products
           </p>
         </div>
 
-        {/* Products Grid/List */}
-        {viewMode === "grid" ? (
+        {/* Loading State */}
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground mb-4">Loading products...</p>
+          </div>
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="group hover:shadow-lg transition-shadow">
