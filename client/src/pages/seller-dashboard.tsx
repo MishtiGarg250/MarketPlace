@@ -50,6 +50,12 @@ export default function SellerDashboardPage() {
   const [productImages, setProductImages] = useState<File[]>([]);
   const [productImageUrls, setProductImageUrls] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  // Features and specifications state
+  const [features, setFeatures] = useState<string[]>([]);
+  const [featureInput, setFeatureInput] = useState("");
+  const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
+  const [specKey, setSpecKey] = useState("");
+  const [specValue, setSpecValue] = useState("");
   const [user, setUser] = useState<any>(null)
   const [sellerProfile, setSellerProfile] = useState<any>(null)
   const [analytics, setAnalytics] = useState<any>(null)
@@ -140,6 +146,11 @@ export default function SellerDashboardPage() {
         setUploadingImage(false);
         imageArr = uploadResults.filter(Boolean) as { url: string }[];
       }
+      // Convert specifications array to object
+      const specsObj: Record<string, string> = {};
+      specifications.forEach(spec => {
+        if (spec.key) specsObj[spec.key] = spec.value;
+      });
       const payload = {
         name: newProduct.name,
         description: newProduct.description,
@@ -149,6 +160,8 @@ export default function SellerDashboardPage() {
         condition: newProduct.condition,
         location: newProduct.location,
         images: imageArr,
+        features,
+        specifications: specsObj,
       };
       await api.post("/products", payload);
       setShowAddProduct(false);
@@ -163,6 +176,11 @@ export default function SellerDashboardPage() {
       });
       setProductImages([]);
       setProductImageUrls([]);
+      setFeatures([]);
+      setFeatureInput("");
+      setSpecifications([]);
+      setSpecKey("");
+      setSpecValue("");
       // Refresh products for this seller
       if (user?._id) {
         const res = await api.get(`/products?sellerId=${user._id}&limit=100`);
@@ -696,6 +714,79 @@ export default function SellerDashboardPage() {
                         <img key={idx} src={url} alt={`Preview ${idx + 1}`} className="w-24 h-24 object-cover rounded" />
                       ))}
                     </div>
+                  )}
+                </div>
+                {/* Features input */}
+                <div>
+                  <Label>Key Features</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={featureInput}
+                      onChange={e => setFeatureInput(e.target.value)}
+                      placeholder="Add a feature"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && featureInput.trim()) {
+                          e.preventDefault();
+                          setFeatures([...features, featureInput.trim()]);
+                          setFeatureInput("");
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (featureInput.trim()) {
+                          setFeatures([...features, featureInput.trim()]);
+                          setFeatureInput("");
+                        }
+                      }}
+                    >Add</Button>
+                  </div>
+                  {features.length > 0 && (
+                    <ul className="list-disc ml-6 text-sm text-muted-foreground">
+                      {features.map((f, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span>{f}</span>
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setFeatures(features.filter((_, idx) => idx !== i))}>Remove</Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {/* Specifications input */}
+                <div>
+                  <Label>Specifications</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={specKey}
+                      onChange={e => setSpecKey(e.target.value)}
+                      placeholder="Key (e.g. Color)"
+                    />
+                    <Input
+                      value={specValue}
+                      onChange={e => setSpecValue(e.target.value)}
+                      placeholder="Value (e.g. Red)"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (specKey.trim() && specValue.trim()) {
+                          setSpecifications([...specifications, { key: specKey.trim(), value: specValue.trim() }]);
+                          setSpecKey("");
+                          setSpecValue("");
+                        }
+                      }}
+                    >Add</Button>
+                  </div>
+                  {specifications.length > 0 && (
+                    <ul className="ml-2 text-sm text-muted-foreground">
+                      {specifications.map((spec, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span>{spec.key}: {spec.value}</span>
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))}>Remove</Button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
                 <div className="flex gap-2 pt-4">

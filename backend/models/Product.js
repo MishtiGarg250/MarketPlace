@@ -10,11 +10,13 @@ const productSchema = new mongoose.Schema({
   condition: { type: String, enum: ['New', 'Used'], default: 'New' },
   location: String,
   images: [
-        {
-            url: { type: String },
-            alt: { type: String, default: "Product Image" }
-        }
-    ],
+    {
+      url: { type: String },
+      alt: { type: String, default: "Product Image" }
+    }
+  ],
+  features: [{ type: String }], // Key features
+  specifications: { type: Object }, // Specifications as key-value pairs
   quantity: { type: Number, default: 1 },
   isFeatured: { type: Boolean, default: false },
   rating: { type: Number, min: 0, max: 5, default: 0 },

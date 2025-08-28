@@ -3,7 +3,7 @@ const generateSKU = require("../utils/skuGenerator")
 
 const createProduct = async (req, res) => {
     try {
-        const { name, description, price, category, quantity } = req.body;
+    const { name, description, price, category, quantity, features, specifications } = req.body;
         let images = [];
         // Accept images from req.body.images (Cloudinary URLs)
         if (req.body.images) {
@@ -38,6 +38,8 @@ const createProduct = async (req, res) => {
             quantity,
             SKU: generateSKU(name),
             images,
+            features: Array.isArray(features) ? features : (typeof features === 'string' ? JSON.parse(features) : []),
+            specifications: typeof specifications === 'string' ? JSON.parse(specifications) : (specifications || {}),
             createdByRole: req.user.role
         });
 

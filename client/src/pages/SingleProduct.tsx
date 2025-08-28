@@ -1,17 +1,11 @@
 
-import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
-import api from "../api/api"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Star, Heart, Share2, ShoppingCart, MapPin, Package } from "lucide-react"
-import { useCart } from "@/contexts/cart-context"
-
-
-
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import api from "../api/api";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Star, Heart } from "lucide-react";
+import { useCart } from "@/contexts/cart-context";
 
 export default function ProductDetailPage() {
   const { addItem } = useCart();
@@ -32,7 +26,7 @@ export default function ProductDetailPage() {
         const res = await api.get(`/products?id=${id}`);
         setProduct(res.data.products[0]);
       } catch (err) {
-        console.log(err);
+        console.log(err)
         setError("Failed to load product");
       }
     };
@@ -78,12 +72,10 @@ export default function ProductDetailPage() {
       });
       setReviewText("");
       setReviewRating(5);
-      // Refresh reviews
       const res = await api.get(`/reviews/product/${id}`);
       setReviews(res.data);
-      console.log(reviews);
     } catch (err) {
-      console.log(err);
+      console.log(err)
       setError("Failed to submit review");
     }
     setReviewLoading(false);
@@ -93,299 +85,198 @@ export default function ProductDetailPage() {
     return <div className="p-8 text-center">Loading...</div>;
   }
 
+  // Simulated real-time visitor and countdown for demo
+  const realTimeVisitors = 56;
+  const countdown = { days: 399, hours: 6, minutes: 15, seconds: 0 };
+
   return (
-    <div className="min-h-screen bg-background">
-
+    <div className="min-h-screen bg-[#f7fafd]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <nav className="mb-8">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <a href="/" className="hover:text-primary">
-              Home
-            </a>
-            <span>/</span>
-            <a href="/products" className="hover:text-primary">
-              Products
-            </a>
-            <span>/</span>
-            <span className="text-foreground">{product.name}</span>
-          </div>
-        </nav>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-          
-          <div className="space-y-4">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Product Gallery */}
+          <div className="lg:col-span-5 flex flex-col items-center bg-white rounded-2xl shadow p-6">
+            <div className="w-full aspect-square rounded-xl overflow-hidden bg-[#f3f4f6] flex items-center justify-center mb-4">
               <img
                 src={product.images?.[selectedImage]?.url || "/placeholder.svg"}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="object-contain w-full h-full"
               />
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {product.images?.map((img: any, index: number) => (
+            <div className="flex gap-2 w-full justify-center">
+              {product.images?.map((img, idx: number) => (
                 <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedImage === index ? "border-primary" : "border-transparent"
-                  }`}
+                  key={idx}
+                  onClick={() => setSelectedImage(idx)}
+                  className={`rounded-xl border-2 p-1 transition-all ${selectedImage === idx ? "border-yellow-400" : "border-transparent"}`}
                 >
                   <img
                     src={img.url || "/placeholder.svg"}
-                    alt={`${product.name} view ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    alt={`thumb-${idx}`}
+                    className="object-contain w-16 h-16"
                   />
                 </button>
               ))}
             </div>
           </div>
-
+          {/* Product Info */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-3xl font-bold text-black leading-tight">{product.name}</h1>
+              <div className="flex items-center gap-2">
+                {[1,2,3,4,5].map(i => (
+                  <Star key={i} className={`h-5 w-5 ${i <= Math.round(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                ))}
+                <span className="text-gray-500 font-medium ml-2">{product.rating || "-"}</span>
+                <span className="text-gray-400 ml-1">| {reviews.length} Ratings</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-6">
+              <div>
+                <span className="text-3xl font-bold text-black">${product.price}</span>
+                {product.originalPrice && (
+                  <span className="ml-2 text-lg text-gray-400 line-through">${product.originalPrice}</span>
+                )}
+                {product.originalPrice && (
+                  <span className="ml-2 text-blue-600 font-semibold">-{Math.round(100 * (1 - product.price / product.originalPrice))}%</span>
+                )}
+              </div>
+              <div className="text-gray-500 font-medium">SKU#: <span className="text-black font-semibold">{product.sku || product._id}</span></div>
+              <div className="text-green-600 font-semibold">{product.quantity > 0 ? "IN STOCK" : "OUT OF STOCK"}</div>
+            </div>
+            {/* Real time visitor and countdown */}
+            <div className="bg-white rounded-xl shadow flex items-center gap-6 px-6 py-4 w-fit">
+              <span className="text-gray-500 font-medium">Real time <span className="bg-yellow-400 text-black px-2 py-1 rounded font-bold mx-1">{realTimeVisitors}</span> visitor right now!</span>
+              <span className="text-2xl font-bold text-black">{countdown.days} <span className="text-base font-normal">Days</span> {countdown.hours} : {countdown.minutes} : {countdown.seconds}</span>
+              <span className="text-gray-400 ml-2">Time is Running Out!</span>
+            </div>
+            
+            {/*Mock data for time being*/}
+            <div className="bg-white rounded-xl shadow p-6">
+              <div className="mb-2 text-gray-700">{product.description}</div>
+              <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                <li><span className="font-semibold">Closure :</span> Hook & Loop</li>
+                <li><span className="font-semibold">Sole :</span> Polyvinyl Chloride</li>
+                <li><span className="font-semibold">Width :</span> Medium</li>
+                <li><span className="font-semibold">Outer Material :</span> A-Grade Standard Quality</li>
+              </ul>
+            </div>
           
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-primary text-primary-foreground">{product.category}</Badge>
-                <Badge variant="outline">{product.condition}</Badge>
-              </div>
-              <h1 className="font-space-grotesk text-3xl font-bold text-foreground mb-2">{product.name}</h1>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center">
-                  <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="ml-1 font-medium">{product.rating || "-"}</span>
-                  <span className="ml-1 text-muted-foreground">({reviews.length} reviews)</span>
-                </div>
-                <div className="flex items-center text-muted-foreground">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {product.location}
-                </div>
-              </div>
-            </div>
-
-            
-            <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-primary">${product.price}</span>
-              {product.originalPrice && (
-                <span className="text-xl text-muted-foreground line-through">${product.originalPrice}</span>
-              )}
-              {product.originalPrice && (
-                <Badge variant="secondary" className="bg-secondary/20 text-secondary-foreground">
-                  Save ${(product.originalPrice - product.price).toFixed(2)}
-                </Badge>
-              )}
-            </div>
-
-            
-            <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-green-600" />
-              <span className="text-green-600 font-medium">{product.quantity} in stock</span>
-            </div>
-
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center border rounded-lg">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3"
-                  >
-                    -
-                  </Button>
-                  <span className="px-4 py-2 min-w-[3rem] text-center">{quantity}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
-                    className="px-3"
-                  >
-                    +
-                  </Button>
-                </div>
-                <Button size="lg" className="flex-1" onClick={handleAddToCart}>
-                  <ShoppingCart className="mr-2 h-5 w-5" />
-                  Add to Cart
-                </Button>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center border rounded-lg bg-white">
                 <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setIsWishlisted(!isWishlisted)}
-                  className={isWishlisted ? "text-red-500 border-red-500" : ""}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-3"
                 >
-                  <Heart className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
+                  -
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Share2 className="h-5 w-5" />
+                <span className="px-4 py-2 min-w-[3rem] text-center">{quantity}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
+                  className="px-3"
+                >
+                  +
                 </Button>
               </div>
-              <Button variant="outline" size="lg" className="w-full bg-transparent">
-                Buy Now
+              <Button
+                className="bg-yellow-400 text-black font-bold px-8 py-3 rounded-lg shadow hover:bg-yellow-500 transition"
+                onClick={handleAddToCart}
+              >
+                ADD TO CART
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`rounded-full p-0 w-10 h-10 flex items-center justify-center border border-yellow-400 bg-white hover:bg-yellow-100 ${isWishlisted ? "text-yellow-400" : ""}`}
+                onClick={() => setIsWishlisted(!isWishlisted)}
+                aria-label={isWishlisted ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Heart className={`h-6 w-6 ${isWishlisted ? "fill-yellow-400 text-yellow-400" : "text-black/30"}`} />
               </Button>
             </div>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={product.seller?.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>{product.seller?.name?.[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{product.seller?.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span>{product.seller?.rating || "-"}</span>
-                        <span>•</span>
-                        <span>{product.seller?.totalSales || 0} sales</span>
-                      </div>
-                    </div>
+            {/* Related products carousel placeholder */}
+            <div className="mt-6">
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {[1,2,3].map((_, idx) => (
+                  <div key={idx} className="min-w-[220px] bg-white rounded-xl shadow p-4 flex flex-col items-center">
+                    <img src={product.images?.[0]?.url || "/placeholder.svg"} alt="related" className="w-24 h-24 object-contain mb-2" />
+                    <div className="font-semibold text-black mb-1">Related Product</div>
+                    <div className="text-yellow-400 font-bold">$99.00</div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View Store
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-medium text-green-600">{product.shipping?.cost || "Free"}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Delivery</span>
-                    <span className="font-medium">{product.shipping?.time || "-"}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Returns</span>
-                    <span className="font-medium">{product.shipping?.returns || "-"}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-        <div className="space-y-8">
-          {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-            </CardContent>
-          </Card>
-
-        
-          <Card>
-            <CardHeader>
-              <CardTitle>Key Features</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {product.features?.map((feature: string, index: number) => (
-                  <li key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Specifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Specifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {product.specifications && Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key} className="flex justify-between py-2 border-b border-border last:border-0">
-                    <span className="text-muted-foreground">{key}</span>
-                    <span className="font-medium">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Reviews */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Reviews</CardTitle>
-              <CardDescription>
-                {reviews.length} reviews with an average rating of {product.rating || "-"} stars
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-          
-                {reviews.length === 0 ? (
-                  <div>No reviews yet.</div>
-                ) : reviews.map((review: any) => (
-                  <div key={review._id} className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={review.buyer?.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>{review.buyer?.name?.[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{review.buyer?.name || "User"}</span>
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <span className="text-sm text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</span>
-                      </div>
+        {/* Tabs for Detail, Specifications, Vendor, Reviews */}
+        <div className="mt-10 bg-white rounded-xl shadow p-6">
+          <div className="flex gap-4 mb-6">
+            <button className="px-6 py-2 rounded-lg font-semibold text-black bg-yellow-400">Detail</button>
+            <button className="px-6 py-2 rounded-lg font-semibold text-black bg-gray-100">Specifications</button>
+            <button className="px-6 py-2 rounded-lg font-semibold text-black bg-gray-100">Vendor</button>
+            <button className="px-6 py-2 rounded-lg font-semibold text-black bg-gray-100">Reviews</button>
+          </div>
+          {/* Reviews section */}
+          <div className="space-y-8">
+            {reviews.length === 0 ? (
+              <div>No reviews yet.</div>
+            ) : reviews.map((review) => (
+              <div key={review._id} className="flex gap-4 items-start">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={review.buyer?.avatar || "/placeholder.svg"} />
+                  <AvatarFallback>{review.buyer?.name?.[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-black">{review.buyer?.name || "User"}</span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                        />
+                      ))}
                     </div>
-                    <p className="text-muted-foreground ml-11">{review.comment}</p>
-                    <Separator />
                   </div>
+                  <span className="text-sm text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
+                  <p className="text-gray-700 mt-2">{review.comment}</p>
+                </div>
+              </div>
+            ))}
+            {/* Add Review Form */}
+            <form className="mt-8 space-y-4" onSubmit={handleReviewSubmit}>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Your Rating:</span>
+                {[1,2,3,4,5].map((star) => (
+                  <button
+                    type="button"
+                    key={star}
+                    onClick={() => setReviewRating(star)}
+                    className="focus:outline-none"
+                  >
+                    <Star className={`h-5 w-5 ${star <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                  </button>
                 ))}
               </div>
-              {/* Add Review Form */}
-              <form className="mt-8 space-y-4" onSubmit={handleReviewSubmit}>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">Your Rating:</span>
-                  {[1,2,3,4,5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      onClick={() => setReviewRating(star)}
-                      className="focus:outline-none"
-                    >
-                      <Star className={`h-5 w-5 ${star <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  className="w-full border rounded p-2"
-                  rows={3}
-                  placeholder="Write your review..."
-                  value={reviewText}
-                  onChange={e => setReviewText(e.target.value)}
-                  required
-                />
-                <Button type="submit" disabled={reviewLoading}>
-                  {reviewLoading ? "Submitting..." : "Submit Review"}
-                </Button>
-                {error && <div className="text-red-500">{error}</div>}
-              </form>
-            </CardContent>
-          </Card>
+              <textarea
+                className="w-full border rounded p-2"
+                rows={3}
+                placeholder="Write your review..."
+                value={reviewText}
+                onChange={e => setReviewText(e.target.value)}
+                required
+              />
+              <Button type="submit" disabled={reviewLoading}>
+                {reviewLoading ? "Submitting..." : "Submit Review"}
+              </Button>
+              {error && <div className="text-red-500">{error}</div>}
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

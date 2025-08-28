@@ -105,11 +105,11 @@ export default function ProfilePage() {
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>
 
   return (
-    <div className="min-h-screen bg-background">
+  <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="font-space-grotesk text-3xl font-bold text-foreground mb-2">My Profile</h1>
-          <p className="text-muted-foreground">Manage your account and view your activity</p>
+          <h1 className="font-space-grotesk text-3xl font-bold text-black mb-2">My Profile</h1>
+          <p className="text-yellow-500">Manage your account and view your activity</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">

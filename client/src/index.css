@@ -3,76 +3,77 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
 :root {
-  /* Updated to modern orange/neutral color palette from design brief */
-  --background: #ffffff; /* Pure white background */
-  --foreground: #4b5563; /* Deep gray for text */
-  --card: #fffbeb; /* Soft off-white for cards */
-  --card-foreground: #4b5563;
-  --popover: #ffffff;
-  --popover-foreground: #4b5563;
-  --primary: #ea580c; /* Vibrant orange primary */
-  --primary-foreground: #ffffff; /* White text on primary */
-  --secondary: #f97316; /* Lighter orange secondary */
-  --secondary-foreground: #ffffff;
-  --muted: #fef2f2; /* Very light pink/orange muted */
-  --muted-foreground: #4b5563;
-  --accent: #f97316; /* Orange accent */
-  --accent-foreground: #ffffff;
+  /* Modern yellow/black/white marketplace palette */
+  --background: #fff; /* White background */
+  --foreground: #000; /* Black text */
+  --card: #fffbe6; /* Very light yellow for cards */
+  --card-foreground: #000;
+  --popover: #fff;
+  --popover-foreground: #000;
+  --primary: #FFD600; /* Main yellow */
+  --primary-foreground: #000; /* Black text on yellow */
+  --secondary: #000; /* Black secondary */
+  --secondary-foreground: #FFD600; /* Yellow text on black */
+  --muted: #f6f6f6; /* Light gray muted */
+  --muted-foreground: #FFD600; /* Yellow for muted text */
+  --accent: #FACC15; /* Accent yellow */
+  --accent-foreground: #000;
   --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #e5e7eb; /* Light gray borders */
-  --input: #fefce8; /* Light yellow input background */
-  --ring: rgba(234, 88, 12, 0.5); /* Orange focus ring */
-  --chart-1: #a16207; /* Chart color 1 */
-  --chart-2: #ea580c; /* Chart color 2 */
-  --chart-3: #dc2626; /* Chart color 3 */
-  --chart-4: #f97316; /* Chart color 4 */
-  --chart-5: #4b5563; /* Chart color 5 */
+  --destructive-foreground: #fff;
+  --border: #000; /* Black borders */
+  --input: #fffde7; /* Subtle yellow input background */
+  --ring: rgba(255, 214, 0, 0.5); /* Yellow focus ring */
+  --chart-1: #FFD600;
+  --chart-2: #FACC15;
+  --chart-3: #000;
+  --chart-4: #fffbe6;
+  --chart-5: #f6f6f6;
   --radius: 0.5rem;
-  --sidebar: #ffffff; /* Sidebar background */
-  --sidebar-foreground: #4b5563; /* Text color in sidebar */
-  --sidebar-primary: #fefce8; /* Primary sidebar background */
-  --sidebar-primary-foreground: #4b5563; /* Text color for primary sidebar */
-  --sidebar-accent: #ea580c; /* Accent color in sidebar */
-  --sidebar-accent-foreground: #ffffff; /* Text color for sidebar accent */
-  --sidebar-border: #e5e7eb; /* Sidebar border color */
-  --sidebar-ring: rgba(234, 88, 12, 0.5); /* Ring color for sidebar items */
+  --sidebar: #fff;
+  --sidebar-foreground: #000;
+  --sidebar-primary: #FFD600;
+  --sidebar-primary-foreground: #000;
+  --sidebar-accent: #000;
+  --sidebar-accent-foreground: #FFD600;
+  --sidebar-border: #FFD600;
+  --sidebar-ring: rgba(255, 214, 0, 0.5);
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-  --card: #1e293b;
-  --card-foreground: #f1f5f9;
-  --popover: #0f172a;
-  --popover-foreground: #f1f5f9;
-  --primary: #f97316;
-  --primary-foreground: #0f172a;
-  --secondary: #ea580c;
-  --secondary-foreground: #ffffff;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #f1f5f9;
+  --background: #181818;
+  --foreground: #FFD600;
+  --card: #232323;
+  --card-foreground: #FFD600;
+  --popover: #232323;
+  --popover-foreground: #FFD600;
+  --primary: #FFD600;
+  --primary-foreground: #181818;
+  --secondary: #FFD600;
+  --secondary-foreground: #181818;
+  --muted: #232323;
+  --muted-foreground: #FFD600;
+  --accent: #FFD600;
+  --accent-foreground: #181818;
   --destructive: #ef4444;
-  --destructive-foreground: #f1f5f9;
-  --border: #334155;
-  --input: #1e293b;
-  --ring: rgba(249, 115, 22, 0.5);
-  --chart-1: #f97316;
-  --chart-2: #ea580c;
-  --chart-3: #e2e8f0;
-  --chart-4: #cbd5e1;
-  --chart-5: #475569;
-  --sidebar: #1e293b;
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #f97316;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: #334155;
-  --sidebar-ring: rgba(249, 115, 22, 0.5);
+  --destructive-foreground: #FFD600;
+  --border: #FFD600;
+  --input: #232323;
+  --ring: rgba(255, 214, 0, 0.5);
+  --chart-1: #FFD600;
+  --chart-2: #FACC15;
+  --chart-3: #232323;
+  --chart-4: #FFD600;
+  --chart-5: #181818;
+  --sidebar: #232323;
+  --sidebar-foreground: #FFD600;
+  --sidebar-primary: #FFD600;
+  --sidebar-primary-foreground: #181818;
+  --sidebar-accent: #232323;
+  --sidebar-accent-foreground: #FFD600;
+  --sidebar-border: #FFD600;
+  --sidebar-ring: rgba(255, 214, 0, 0.5);
 }
 
 @theme inline {
@@ -120,7 +121,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-yellow-400/50;
   }
   body {
     @apply bg-background text-foreground font-sans;
@@ -153,5 +154,5 @@
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.1);
+  box-shadow: 0 8px 25px rgba(255, 214, 0, 0.12);
 }

@@ -2,11 +2,11 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { Star, Heart, Filter, Grid, List, Search } from "lucide-react"
+import { Star, Heart, Filter, Grid, List, Search,ShoppingCart } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import api, { addFavorite, removeFavorite, getFavorites } from "@/api/api"
 
@@ -135,14 +135,14 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+  <div className="min-h-screen bg-white">
 
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-space-grotesk text-3xl font-bold text-foreground mb-4">Marketplace</h1>
-          <p className="text-muted-foreground">Discover amazing products from trusted sellers</p>
+          <h1 className="font-space-grotesk text-3xl font-bold text-black mb-4">Marketplace</h1>
+          <p className="text-yellow-500">Discover amazing products from trusted sellers</p>
         </div>
 
         {/* Search and Filters */}
@@ -254,57 +254,66 @@ export default function ProductsPage() {
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-                <CardHeader className="p-0">
-                  <div className="relative">
-                    <a href={`/products/${product.id}`}>
-                      <img
-                        src={product.image || "/placeholder.svg"}
-                        alt={product.title}
-                        className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform"
-                      />
-                    </a>
+              <div
+                key={product.id}
+                className="bg-white rounded-2xl border border-black/10 shadow-sm hover:shadow-lg transition-all flex flex-col items-stretch p-0"
+              >
+                {/* Badge (e.g. Trending/New/Sale) */}
+                <div className="absolute left-4 top-4 z-10">
+                  <span className="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full shadow-sm">{product.category?.toUpperCase()}</span>
+                </div>
+                {/* Product Image */}
+                <a href={`/products/${product.id}`} className="block px-6 pt-6 pb-2">
+                  <div className="bg-[#f6f6f6] rounded-xl flex items-center justify-center h-40 w-full overflow-hidden">
+                    <img
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.title}
+                      className="object-contain h-36 w-full"
+                    />
+                  </div>
+                </a>
+                {/* Card Content */}
+                <div className="flex flex-col flex-1 px-6 pb-4">
+                  <div className="flex items-center justify-between mt-2 mb-1">
+                    <span className="text-xs text-black/50 font-semibold tracking-wide">{product.category?.toUpperCase()}</span>
+                    <span className="text-xs text-black/50 font-semibold">{product.stock > 0 ? `In Stock` : `Out of Stock`}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-black/50">Seller</span>
+                    <span className="text-xs text-black/50">{product.seller}</span>
+                  </div>
+                  <a href={`/products/${product.id}`}>
+                    <div className="font-semibold text-lg text-black mb-1 truncate">{product.title}</div>
+                  </a>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl font-bold text-black">${product.price}</span>
+                    
+                  </div>
+                 
+                  {/* Action icons */}
+                  <div className="flex items-center justify-between mt-auto">
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
-                      className="absolute top-2 right-2 bg-background/80 hover:bg-background"
+                      className="rounded-full p-0 w-8 h-8 flex items-center justify-center border border-yellow-400 bg-white hover:bg-yellow-100"
+                      onClick={() => handleAddToCart(product.id)}
+                      aria-label={favoriteIds.includes(product.id) ? "Remove from favorites" : "Add to favorites"}
+                    >
+                      <ShoppingCart className={`h-5 w-5 ${favoriteIds.includes(product.id) ? "fill-yellow-400 text-yellow-400" : "text-black/30"}`} />
+                    </Button>
+                    
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="rounded-full p-0 w-8 h-8 flex items-center justify-center border border-yellow-400 bg-white hover:bg-yellow-100"
                       onClick={() => handleToggleFavorite(product.id)}
                       aria-label={favoriteIds.includes(product.id) ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <Heart className={`h-4 w-4 ${favoriteIds.includes(product.id) ? "fill-red-500 text-red-500" : ""}`} />
+                      <Heart className={`h-5 w-5 ${favoriteIds.includes(product.id) ? "fill-yellow-400 text-yellow-400" : "text-black/30"}`} />
                     </Button>
-                    <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
-                      {product.category}
-                    </Badge>
-                    {product.condition === "Used" && (
-                      <Badge variant="secondary" className="absolute bottom-2 left-2">
-                        Used
-                      </Badge>
-                    )}
                   </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <a href={`/products/${product.id}`}>
-                    <CardTitle className="text-lg mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                      {product.title}
-                    </CardTitle>
-                  </a>
-                  <CardDescription className="mb-3">by {product.seller}</CardDescription>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-2xl font-bold text-primary">${product.price}</span>
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="ml-1 text-sm text-muted-foreground">
-                        {product.rating} ({product.reviews})
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
-                  <Button className="w-full" onClick={() => handleAddToCart(product)}>
-                    Add to Cart
-                  </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
