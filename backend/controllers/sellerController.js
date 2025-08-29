@@ -17,19 +17,33 @@ exports.getSellerProfile = async (req, res) => {
 // Update seller profile (name, description, avatar, location, etc)
 exports.updateSellerProfile = async (req, res) => {
   try {
+    console.log("[updateSellerProfile] req.user:", req.user);
+    console.log("[updateSellerProfile] req.params.sellerId:", req.params.sellerId);
     const seller = await User.findById(req.params.sellerId);
-    if (!seller || seller.role !== "seller") return res.status(404).json({ msg: "Seller not found" });
+    if (!seller) {
+      console.log("[updateSellerProfile] Seller not found");
+      return res.status(404).json({ msg: "Seller not found" });
+    }
+    if (seller.role !== "seller") {
+      console.log("[updateSellerProfile] User is not a seller");
+      return res.status(404).json({ msg: "User is not a seller" });
+    }
     // Only allow editing by self or admin
-    if (req.user.role !== "admin" && req.user.id !== seller.id) return res.status(403).json({ msg: "Forbidden" });
-    const { name, description, avatar, location } = req.body;
-    if (name) seller.name = name;
-    if (description) seller.description = description;
-    if (avatar) seller.avatar = avatar;
-    if (location) seller.location = location;
+    if (req.user.role !== "admin" && req.user.id !== seller.id) {
+      console.log("[updateSellerProfile] Forbidden: req.user.id:", req.user.id, "seller.id:", seller.id);
+      return res.status(403).json({ msg: "Forbidden: You can only edit your own seller profile." });
+    }
+  const { name, description, avatar, location } = req.body;
+  if (typeof name !== 'undefined') seller.name = name;
+  if (typeof description !== 'undefined') seller.description = description;
+  if (typeof avatar !== 'undefined') seller.avatar = avatar;
+  if (typeof location !== 'undefined') seller.location = location;
     await seller.save();
+    console.log("[updateSellerProfile] Profile updated successfully");
     res.json({ msg: "Profile updated", seller });
   } catch (err) {
-    res.status(500).json({ msg: "Server error" });
+    console.error("[updateSellerProfile] Server error:", err);
+    res.status(500).json({ msg: "Server error", error: err.message });
   }
 };
 
@@ -73,12 +87,23 @@ exports.getSellerAnalytics = async (req, res) => {
 exports.getSellerOrders = async (req, res) => {
   try {
     const sellerId = req.params.sellerId;
-    const orders = await Transaction.find({ "items.seller": sellerId }).populate("buyer", "name");
+    // Populate buyer and items.productId (with selected fields)
+    const orders = await Transaction.find({ "items.seller": sellerId })
+      .populate("buyer", "name")
+      .populate({
+        path: "items.productId",
+        select: "name images rating reviews"
+      });
     // Filter only items for this seller
-    const sellerOrders = orders.map(order => ({
-      ...order.toObject(),
-      items: order.items.filter(item => item.seller.toString() === sellerId)
-    })).filter(order => order.items.length > 0);
+    const sellerOrders = orders.map(order => {
+      // For each item, only keep those for this seller
+      const filteredItems = order.items.filter(item => item.seller.toString() === sellerId);
+      // Return order with filtered items
+      return {
+        ...order.toObject(),
+        items: filteredItems
+      };
+    }).filter(order => order.items.length > 0);
     res.json(sellerOrders);
   } catch (err) {
     res.status(500).json({ msg: "Server error" });

@@ -3,7 +3,7 @@ const generateSKU = require("../utils/skuGenerator")
 
 const createProduct = async (req, res) => {
     try {
-    const { name, description, price, category, quantity, features, specifications } = req.body;
+    const { name, description, price, category, quantity, features } = req.body;
         let images = [];
         // Accept images from req.body.images (Cloudinary URLs)
         if (req.body.images) {
@@ -39,7 +39,6 @@ const createProduct = async (req, res) => {
             SKU: generateSKU(name),
             images,
             features: Array.isArray(features) ? features : (typeof features === 'string' ? JSON.parse(features) : []),
-            specifications: typeof specifications === 'string' ? JSON.parse(specifications) : (specifications || {}),
             createdByRole: req.user.role
         });
 
@@ -55,14 +54,31 @@ const createProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
     try {
+        // If id is provided, return only that product
+        if (req.query.id) {
+            const product = await Product.findById(req.query.id);
+            if (!product) {
+                return res.status(404).json({ message: "Product not found" });
+            }
+            return res.json({ product });
+        }
+
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        // Allow filtering by sellerId
+        // Allow filtering by sellerId and location
         const filter = {};
         if (req.query.sellerId) {
             filter.sellerId = req.query.sellerId;
+        }
+
+        // Location filter: only show products where seller location matches
+        if (req.query.location) {
+            // Need to join with User to get seller location
+            const sellerUsers = await require("../models/User").find({ location: req.query.location }).select("_id");
+            const sellerIds = sellerUsers.map(u => u._id);
+            filter.sellerId = { $in: sellerIds };
         }
 
         const products = await Product.find(filter)
@@ -84,7 +100,7 @@ const updateProduct = async (req, res) => {
         const product = await Product.findById(productId);
         if (!product) return res.status(404).json({ message: "Product not found" });
 
-        if (req.user.role === "seller" && product.seller.toString() !== req.user.id) {
+        if (req.user.role === "seller" && product.sellerId.toString() !== req.user.id) {
             return res.status(403).json({ message: "Forbidden: Cannot edit this product" });
         }
 
@@ -123,7 +139,7 @@ const deleteProduct = async (req, res) => {
         if (!product) return res.status(404).json({ message: "Product not found" });
 
         // Check if seller owns the product or admin
-        if (req.user.role === "seller" && product.seller.toString() !== req.user.id) {
+        if (req.user.role === "seller" && product.sellerId.toString() !== req.user.id) {
             return res.status(403).json({ message: "Forbidden: Cannot delete this product" });
         }
 

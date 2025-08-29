@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   passwordHash: { type: String, required: true },
   role: { type: String, enum: ['buyer','seller','admin'], default: 'buyer' },
   location: String,
@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 });
+
+userSchema.index({ email: 1, role: 1 }, { unique: true });
 
 // Password compare
 userSchema.methods.comparePassword = function(password) {

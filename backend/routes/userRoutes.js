@@ -2,7 +2,7 @@ const { getSellerProfile, updateSellerProfile, getSellerReviews } = require("../
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/auth");
-const { getProfile } = require("../controllers/userController");
+const { getProfile, updateProfile } = require("../controllers/userController");
 const favoriteController = require("../controllers/favoriteController");
 router.post("/favorites/add", protect, favoriteController.addFavorite);
 router.post("/favorites/remove", protect, favoriteController.removeFavorite);
@@ -12,6 +12,7 @@ const { register, login } = require("../controllers/authController");
 router.post("/register", register);
 router.post("/login", login);
 router.get("/me", protect, getProfile);
+router.put("/me", protect, updateProfile);
 router.get("/seller/:sellerId", getSellerProfile);
 router.put("/seller/:sellerId", protect, authorize("seller", "admin"), updateSellerProfile);
 router.get("/seller/:sellerId/reviews", getSellerReviews);

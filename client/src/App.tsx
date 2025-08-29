@@ -1,6 +1,6 @@
 import HomePage from "./pages/HomePage"
 import ProductsPage from "./pages/Products"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import { CartProvider } from "./contexts/cart-context"
 import ProfilePage from "./pages/Profile"
 import ProductDetailPage from "./pages/SingleProduct"
@@ -14,9 +14,11 @@ import Navbar from "./components/Navbar"
 import CheckoutSuccess from "./pages/CheckoutSuccess"
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = ["/login", "/signup"].includes(location.pathname);
   return (
     <CartProvider>
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />

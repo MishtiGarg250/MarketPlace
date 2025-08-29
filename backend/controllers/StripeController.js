@@ -6,6 +6,15 @@ const Product = require("../models/Product");
 exports.mockComplete = async (req, res) => {
   try {
     const userId = req.user.id;
+    // Prevent duplicate transactions within 30 seconds
+    const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+    const recentTx = await Transaction.findOne({
+      buyer: userId,
+      createdAt: { $gte: thirtySecondsAgo }
+    });
+    if (recentTx) {
+      return res.status(429).json({ msg: "Duplicate checkout detected. Please wait a moment before trying again." });
+    }
     const cartItems = await Cart.find({ userId }).populate("productId");
     if (!cartItems || cartItems.length === 0) {
       return res.status(404).json({ msg: "Your cart is empty" });

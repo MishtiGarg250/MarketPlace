@@ -113,9 +113,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Updated font configuration to use Geist Sans and Manrope */
-  --font-sans: "Geist", system-ui, sans-serif;
-  --font-serif: "Manrope", system-ui, sans-serif;
+  /* Updated font configuration to use Poppins */
+  --font-sans: "Poppins", system-ui, sans-serif;
+  --font-serif: "Poppins", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -125,6 +125,24 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
+  }
+  
+  /* Preserve original fonts for navbar and homepage */
+  .font-space-grotesk {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+  }
+  
+  .font-monospace {
+    font-family: "Courier New", Courier, monospace;
+  }
+  
+  .font-sans-serif {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  
+  /* Ensure Poppins is applied to all text except navbar and homepage */
+  .font-poppins {
+    font-family: "Poppins", system-ui, sans-serif;
   }
 }
 
