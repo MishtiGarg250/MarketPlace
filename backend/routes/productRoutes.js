@@ -9,7 +9,7 @@ const{
     updateProduct,
     deleteProduct,
     toggleFeatured
-} = require("../controllers/productController");
+} = require("../controllers/ProductController");
 
 router.post("/upload", protect, authorize("seller"), (req, res, next) => {
     upload.single("image")(req, res, function (err) {
