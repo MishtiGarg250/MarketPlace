@@ -2,9 +2,7 @@
 
 MarketPlace is a full-stack marketplace application where users can register, log in, browse products, manage favorites, interact with sellers, and view reviews.  
 The backend is built with **Node.js**, **Express**, and **MongoDB**, and the frontend uses **React**.
-
 ---
-
 ## Features
 
 - **Authentication & Authorization**
