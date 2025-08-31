@@ -81,7 +81,11 @@ const { Server } = require("socket.io");
 connectDB();
 
 
-app.use(cors());
+app.use(cors({
+  origin: "https://dealperfect-marketplace.vercel.app/", // your frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 app.use("/api/products", productRoutes);
