@@ -86,7 +86,35 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
   credentials: true
 }));
+
+
 app.use(bodyParser.json());
+
+
+let requestLogs = [];
+
+app.use((req, res, next) => {
+  const logEntry = {
+    method: req.method,
+    url: req.originalUrl,
+    time: new Date().toISOString()
+  };
+
+  requestLogs.push(logEntry);
+
+  if (requestLogs.length > 50) {
+    requestLogs.shift(); // remove oldest
+  }
+
+  console.log(`[${logEntry.time}] ${logEntry.method} ${logEntry.url}`);
+  next();
+});
+
+// Route to see last 50 logs
+app.get("/api/logs", (req, res) => {
+  res.json(requestLogs);
+});
+
 
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
