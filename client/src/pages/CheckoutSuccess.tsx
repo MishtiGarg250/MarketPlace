@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect} from "react"
 import { useCart } from "@/contexts/cart-context"
 import { useNavigate } from "react-router-dom"
 import { CheckCircle } from "lucide-react"
