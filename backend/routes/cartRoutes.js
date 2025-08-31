@@ -9,7 +9,6 @@ const {
 
 const { protect } = require("../middleware/auth");
 
-// Buyer routes
 router.post("/", protect, addToCart);
 router.get("/", protect, getCart);
 router.put("/:id", protect, updateCartItem);

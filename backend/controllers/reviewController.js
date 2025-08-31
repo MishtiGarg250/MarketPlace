@@ -12,7 +12,7 @@ exports.addReview = async(req,res)=>{
       comment
     });
 
-    // Always recalculate average rating from all reviews for this product
+    
     const reviews = await Review.find({ product: productId });
     let avgRating = 0;
     if (reviews.length > 0) {

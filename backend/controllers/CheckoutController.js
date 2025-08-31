@@ -8,14 +8,12 @@ exports.checkout = async(req,res)=>{
     const userId = req.user.id;
     console.log(`[CHECKOUT] Starting checkout for user: ${userId}`);
     
-    // Prevent duplicate transactions within 30 seconds
     const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
     const recentTx = await Transaction.findOne({
       buyer: userId,
       createdAt: { $gte: thirtySecondsAgo }
     });
     if (recentTx) {
-      console.log(`[CHECKOUT] Duplicate detected for user: ${userId}, recent transaction: ${recentTx._id}`);
       return res.status(429).json({ msg: "Duplicate checkout detected. Please wait a moment before trying again." });
     }
     
@@ -34,7 +32,7 @@ exports.checkout = async(req,res)=>{
       seedNumber += seed.charCodeAt(i);
     }
     
-    // Use same formula as frontend: (seedNumber % 10) / 100 * subtotal
+    
     const feePercentage = (seedNumber % 10) / 100;
 
     for (const item of cartItems) {

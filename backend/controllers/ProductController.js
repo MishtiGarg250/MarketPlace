@@ -91,7 +91,7 @@ const getProducts = async (req, res) => {
       filter._id = { $ne: req.query.excludeId };
     }
 
-    // Filter by featured status
+
     if (req.query.featured === 'true') {
       filter.isFeatured = true;
     }
@@ -175,12 +175,11 @@ const toggleFeatured = async(req,res)=>{
             return res.status(404).json({ message: "Product not found" });
         }
         
-        // Only allow seller to toggle their own products
+    
         if (req.user.role === "seller" && product.sellerId.toString() !== req.user.id) {
             return res.status(403).json({ message: "Forbidden: Cannot modify this product" });
         }
         
-        // Toggle featured status
         product.isFeatured = !product.isFeatured;
         await product.save();
         

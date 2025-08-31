@@ -1,0 +1,1185 @@
+
+info:
+  title: MarketPlace API
+  description: OpenAPI v3 specification for the MarketPlace backend.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ObjectId:
+      type: string
+      description: MongoDB ObjectId as string
+      example: "64e2f9b8a1f4c2b3d4e5f678"
+    Image:
+      type: object
+      properties:
+        url:
+          type: string
+          example: "https://res.cloudinary.com/.../image.jpg"
+        alt:
+          type: string
+          example: "Product image"
+    User:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        name:
+          type: string
+          example: "Mishti Garg"
+        email:
+          type: string
+          example: "mishti@example.com"
+        role:
+          type: string
+          enum: ['buyer','seller','admin']
+          example: "buyer"
+        location:
+          type: string
+          example: "Allahabad, India"
+        contact:
+          type: string
+          example: "+91-9876543210"
+        avatar:
+          type: string
+          example: "https://example.com/avatar.jpg"
+        status:
+          type: string
+          enum: ['Active','Suspended']
+          example: "Active"
+        joinDate:
+          type: string
+          format: date-time
+        totalOrders:
+          type: integer
+          example: 3
+        totalSpent:
+          type: number
+          format: float
+          example: 149.99
+        favorites:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectId'
+      required:
+        - _id
+        - name
+        - email
+    AuthRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "mishti@example.com"
+        password:
+          type: string
+          example: "secret123"
+      required:
+        - email
+        - password
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/User'
+    Product:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        sellerId:
+          $ref: '#/components/schemas/ObjectId'
+        name:
+          type: string
+          example: "Wireless Headphones"
+        description:
+          type: string
+          example: "Comfortable wireless headphones with noise cancellation."
+        price:
+          type: number
+          format: float
+          example: 59.99
+        SKU:
+          type: string
+          example: "WH-001"
+        category:
+          type: string
+          example: "Electronics"
+        condition:
+          type: string
+          enum: ["New","Used"]
+          example: "New"
+        location:
+          type: string
+          example: "Delhi, India"
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        features:
+          type: array
+          items:
+            type: string
+          example: ["Bluetooth 5.0", "12h battery"]
+        quantity:
+          type: integer
+          example: 10
+        isFeatured:
+          type: boolean
+          example: false
+        rating:
+          type: number
+          format: float
+          example: 4.5
+        reviews:
+          type: integer
+          example: 12
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - _id
+        - sellerId
+        - name
+        - price
+    CartItem:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        userId:
+          $ref: '#/components/schemas/ObjectId'
+        productId:
+          $ref: '#/components/schemas/ObjectId'
+        quantity:
+          type: integer
+          example: 2
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - _id
+        - userId
+        - productId
+    Favorite:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        userId:
+          $ref: '#/components/schemas/ObjectId'
+        productId:
+          $ref: '#/components/schemas/ObjectId'
+        createdAt:
+          type: string
+          format: date-time
+    Review:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        seller:
+          $ref: '#/components/schemas/ObjectId'
+        product:
+          $ref: '#/components/schemas/ObjectId'
+        buyer:
+          $ref: '#/components/schemas/ObjectId'
+        rating:
+          type: integer
+          format: int32
+          example: 5
+        comment:
+          type: string
+          example: "Great product and fast shipping!"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - _id
+        - seller
+        - product
+        - buyer
+        - rating
+    TransactionItem:
+      type: object
+      properties:
+        productId:
+          $ref: '#/components/schemas/ObjectId'
+        seller:
+          $ref: '#/components/schemas/ObjectId'
+        quantity:
+          type: integer
+          example: 1
+        price:
+          type: number
+          format: float
+          example: 59.99
+    Transaction:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        buyer:
+          $ref: '#/components/schemas/ObjectId'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionItem'
+        subtotal:
+          type: number
+          format: float
+          example: 59.99
+        platformFee:
+          type: number
+          format: float
+          example: 1.5
+        total:
+          type: number
+          format: float
+          example: 61.49
+        status:
+          type: string
+          enum: ['success','failed','pending']
+          example: "pending"
+        createdAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Resource not found"
+  parameters:
+    productId:
+      name: id
+      in: path
+      required: true
+      description: Product ObjectId
+      schema:
+        $ref: '#/components/schemas/ObjectId'
+    sellerIdPath:
+      name: sellerId
+      in: path
+      required: true
+      description: Seller's ObjectId
+      schema:
+        $ref: '#/components/schemas/ObjectId'
+    productIdPath:
+      name: productId
+      in: path
+      required: true
+      description: Product's ObjectId
+      schema:
+        $ref: '#/components/schemas/ObjectId'
+paths:
+
+  /users/register:
+    post:
+      tags: [Users, Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Mishti Garg"
+                email:
+                  type: string
+                  example: "mishti@example.com"
+                password:
+                  type: string
+                  example: "secret123"
+                role:
+                  type: string
+                  enum: ['buyer','seller','admin']
+                  example: "buyer"
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/login:
+    post:
+      tags: [Users, Auth]
+      summary: Login and receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user's profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Users]
+      summary: Update current user's profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                location:
+                  type: string
+                contact:
+                  type: string
+                avatar:
+                  type: string
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/seller/{sellerId}:
+    get:
+      tags: [Users, Seller]
+      summary: Get public seller profile
+      parameters:
+        - $ref: '#/components/parameters/sellerIdPath'
+      responses:
+        '200':
+          description: Seller profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Seller not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Users, Seller]
+      summary: Update seller profile (seller/admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/sellerIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                location:
+                  type: string
+                contact:
+                  type: string
+                avatar:
+                  type: string
+      responses:
+        '200':
+          description: Seller updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden (not seller/admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/seller/{sellerId}/reviews:
+    get:
+      tags: [Reviews, Seller]
+      summary: Get reviews for a seller
+      parameters:
+        - $ref: '#/components/parameters/sellerIdPath'
+      responses:
+        '200':
+          description: List of reviews for seller
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+
+  /users/favorites/add:
+    post:
+      tags: [Favorites]
+      summary: Add a product to user's favorites
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: '#/components/schemas/ObjectId'
+              required:
+                - productId
+      responses:
+        '200':
+          description: Favorite added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Favorite'
+        '401':
+          description: Unauthorized
+
+  /users/favorites/remove:
+    post:
+      tags: [Favorites]
+      summary: Remove a product from user's favorites
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: '#/components/schemas/ObjectId'
+              required:
+                - productId
+      responses:
+        '200':
+          description: Favorite removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /users/favorites:
+    get:
+      tags: [Favorites]
+      summary: Get current user's favorites
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Array of favorite products (ids or populated)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/Favorite'
+                    - $ref: '#/components/schemas/Product'
+
+  /products:
+    get:
+      tags: [Products]
+      summary: List products (public)
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search query
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      tags: [Products]
+      summary: Create a product (seller only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                SKU:
+                  type: string
+                category:
+                  type: string
+                condition:
+                  type: string
+                  enum: ["New","Used"]
+                location:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Image'
+                features:
+                  type: array
+                  items:
+                    type: string
+                quantity:
+                  type: integer
+              required:
+                - name
+                - price
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '403':
+          description: Forbidden (must be seller)
+
+  /products/upload:
+    post:
+      tags: [Products]
+      summary: Upload a product image (seller only)
+      description: Returns uploaded image URL (uses multer/cloudinary in implementation)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload successful - returns URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: "https://res.cloudinary.com/..../product.jpg"
+        '400':
+          description: No file uploaded
+
+  /products/{id}:
+    get:
+      tags: [Products]
+      summary: Get a single product by id
+      parameters:
+        - $ref: '#/components/parameters/productId'
+      responses:
+        '200':
+          description: Product object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Products]
+      summary: Update a product (seller only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/productId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                price: { type: number }
+                quantity: { type: integer }
+                isFeatured: { type: boolean }
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '403':
+          description: Forbidden
+    delete:
+      tags: [Products]
+      summary: Delete a product (seller only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/productId'
+      responses:
+        '200':
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '403':
+          description: Forbidden
+
+  /products/{id}/feature:
+    put:
+      tags: [Products]
+      summary: Toggle product featured (seller only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/productId'
+      responses:
+        '200':
+          description: Product featured toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /products/seller/{sellerId}/analytics:
+    get:
+      tags: [Seller]
+      summary: Get seller analytics
+      parameters:
+        - $ref: '#/components/parameters/sellerIdPath'
+      responses:
+        '200':
+          description: Seller analytics (custom structure)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalProducts:
+                    type: integer
+                    example: 12
+                  totalSales:
+                    type: integer
+                    example: 120
+                  totalRevenue:
+                    type: number
+                    example: 4999.99
+                  monthlyBreakdown:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        month: { type: string }
+                        revenue: { type: number }
+
+  /products/seller/{sellerId}/orders:
+    get:
+      tags: [Seller]
+      summary: Get orders for a seller
+      parameters:
+        - $ref: '#/components/parameters/sellerIdPath'
+      responses:
+        '200':
+          description: Orders list for seller
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /payment/stripe-session:
+    post:
+      tags: [Payment, Stripe]
+      summary: Create Stripe checkout session (buyer only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TransactionItem'
+              required:
+                - items
+      responses:
+        '200':
+          description: Stripe session created (returns session id & url)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                    example: "cs_test_a1b2c3"
+                  url:
+                    type: string
+                    example: "https://checkout.stripe.com/pay/cs_test_a1b2c3"
+        '400':
+          description: Bad request
+
+  /payment/mock-complete:
+    post:
+      tags: [Payment]
+      summary: Mock complete payment (testing)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transactionId:
+                  $ref: '#/components/schemas/ObjectId'
+              required:
+                - transactionId
+      responses:
+        '200':
+          description: Mock payment completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /checkout:
+    post:
+      tags: [Checkout]
+      summary: Checkout and create transaction (buyer only)
+      description: Checkout route applies rate limiting and idempotency (server middleware)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TransactionItem'
+                idempotencyKey:
+                  type: string
+                  description: "Idempotency key passed in header/middleware"
+              required:
+                - items
+      responses:
+        '201':
+          description: Transaction created (pending or success depending on payment flow)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Bad request
+        '429':
+          description: Rate limit exceeded
+
+  /cart:
+    post:
+      tags: [Cart]
+      summary: Add an item to cart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  $ref: '#/components/schemas/ObjectId'
+                quantity:
+                  type: integer
+                  example: 1
+              required:
+                - productId
+      responses:
+        '201':
+          description: Cart item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+    get:
+      tags: [Cart]
+      summary: Get current user's cart
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User's cart items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartItem'
+
+  /cart/{id}:
+    put:
+      tags: [Cart]
+      summary: Update a cart item (quantity)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Cart item id
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+      responses:
+        '200':
+          description: Updated cart item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+    delete:
+      tags: [Cart]
+      summary: Remove a cart item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+      responses:
+        '200':
+          description: Cart item removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /reviews:
+    post:
+      tags: [Reviews]
+      summary: Add a review (buyer)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seller:
+                  $ref: '#/components/schemas/ObjectId'
+                product:
+                  $ref: '#/components/schemas/ObjectId'
+                rating:
+                  type: integer
+                  example: 5
+                comment:
+                  type: string
+              required:
+                - seller
+                - product
+                - rating
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+    get:
+      summary: (Not used) -- use specific endpoints below
+
+  /reviews/seller/{sellerId}:
+    get:
+      tags: [Reviews]
+      summary: Get reviews for a seller
+      parameters:
+        - $ref: '#/components/parameters/sellerIdPath'
+      responses:
+        '200':
+          description: Array of reviews for the seller
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+
+  /reviews/product/{productId}:
+    get:
+      tags: [Reviews]
+      summary: Get reviews for a product
+      parameters:
+        - $ref: '#/components/parameters/productIdPath'
+      responses:
+        '200':
+          description: Array of reviews for the product
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+
+  /search:
+    get:
+      tags: [Search]
+      summary: Search products
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: search text
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: minPrice
+          schema:
+            type: number
+        - in: query
+          name: maxPrice
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: Get platform statistics (admin only)
+      description: Requires admin role via authorize middleware.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers: { type: integer, example: 1200 }
+                  totalProducts: { type: integer, example: 350 }
+                  totalOrders: { type: integer, example: 4500 }
+                  totalRevenue: { type: number, example: 125000.5 }
+        '403':
+          description: Forbidden
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Array of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /admin/products:
+    get:
+      tags: [Admin]
+      summary: List products (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Array of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /admin/orders:
+    get:
+      tags: [Admin]
+      summary: List transactions/orders (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Array of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+tags:
+  - name: Users
+    description: User registration, login and profile
+  - name: Auth
+    description: Authentication endpoints
+  - name: Products
+    description: Product CRUD and upload
+  - name: Cart
+    description: Shopping cart operations
+  - name: Checkout
+    description: Checkout / transaction creation
+  - name: Payment
+    description: Payment related endpoints (Stripe)
+  - name: Reviews
+    description: Product and seller reviews
+  - name: Favorites
+    description: User favorites
+  - name: Search
+    description: Product search
+  - name: Seller
+    description: Seller-specific endpoints and analytics
+  - name: Admin
+    description: Admin-only endpoints
+  - name: Stripe
+    description: Stripe integration helpers
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

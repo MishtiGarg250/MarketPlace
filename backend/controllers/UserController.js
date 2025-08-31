@@ -1,3 +1,6 @@
+const User = require('../models/User');
+const Transaction = require('../models/Transaction');
+
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -15,8 +18,7 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-const User = require('../models/User');
-const Transaction = require('../models/Transaction');
+
 
 
 exports.getProfile = async (req, res) => {

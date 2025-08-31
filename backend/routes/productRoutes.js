@@ -3,6 +3,7 @@ const router = express.Router();
 const {protect, authorize} = require("../middleware/auth");
 const { getSellerAnalytics, getSellerOrders } = require("../controllers/sellerController");
 const upload = require("../config/multer");
+const Product = require("../models/Product");
 const{
     createProduct,
     getProducts,
@@ -25,8 +26,6 @@ router.post("/upload", protect, authorize("seller"), (req, res, next) => {
 });
 
 router.get("/", getProducts);
-// Get single product by ID
-const Product = require("../models/Product");
 router.get("/:id", async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -40,7 +39,6 @@ router.post("/", protect, authorize("seller"), createProduct);
 router.put("/:id", protect, authorize("seller"), updateProduct);
 router.delete("/:id", protect, authorize("seller"), deleteProduct);
 router.put("/:id/feature", protect, authorize("seller"), toggleFeatured);
-
 router.get("/seller/:sellerId/analytics", getSellerAnalytics);
 router.get("/seller/:sellerId/orders", getSellerOrders);
 
