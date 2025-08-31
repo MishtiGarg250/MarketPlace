@@ -82,7 +82,7 @@ connectDB();
 
 
 app.use(cors({
-  origin: "https://dealperfect-marketplace.vercel.app/", // your frontend domain
+  origin: "https://dealperfect-marketplace.vercel.app", // your frontend domain
   methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
   credentials: true
 }));
