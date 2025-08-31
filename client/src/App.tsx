@@ -1,6 +1,6 @@
 import HomePage from "./pages/HomePage"
 import ProductsPage from "./pages/Products"
-import { Routes, Route, useLocation, Navigate } from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import { CartProvider } from "./contexts/cart-context"
 import ProfilePage from "./pages/Profile"
 import ProductDetailPage from "./pages/SingleProduct"
