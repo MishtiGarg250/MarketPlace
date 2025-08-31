@@ -8,11 +8,9 @@ import api from "../api/api"
 export default function CheckoutSuccess() {
   const navigate = useNavigate()
   const { clearCart } = useCart();
-  const hasRun = useRef(false);
   
   useEffect(() => {
-    if (hasRun.current) return; 
-    hasRun.current = true;
+    
     
     const completeOrder = async () => {
       try {
