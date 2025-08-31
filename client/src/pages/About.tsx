@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { ASSIGNMENT_SEED, generateColorFromSeed } from "@/utils/seedUtils"
 
 export default function AboutPage() {
-  const seedColor = generateColorFromSeed(ASSIGNMENT_SEED)
+  const seedColor = generateColorFromSeed()
 
   return (
     <div className="min-h-screen bg-background py-16">

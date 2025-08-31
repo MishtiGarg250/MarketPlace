@@ -1,7 +1,7 @@
 
 export const ASSIGNMENT_SEED = "FRONT25-039"
 
-export function generateColorFromSeed(seed: string): string {
+export function generateColorFromSeed(): string {
   
   return `hsl(53.88,100.00%,61.57%)`
 }
