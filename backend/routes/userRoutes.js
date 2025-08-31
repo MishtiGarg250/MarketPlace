@@ -2,7 +2,7 @@ const { getSellerProfile, updateSellerProfile, getSellerReviews } = require("../
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/auth");
-const { getProfile, updateProfile } = require("../controllers/userController");
+const { getProfile, updateProfile } = require("../controllers/UserController");
 const favoriteController = require("../controllers/favoriteController");
 router.post("/favorites/add", protect, favoriteController.addFavorite);
 router.post("/favorites/remove", protect, favoriteController.removeFavorite);
