@@ -36,8 +36,8 @@ exports.createStripeSession = async (req, res) => {
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
-      success_url: `${process.env.CLIENT_URL}checkout-success`,
-      cancel_url: `${process.env.CLIENT_URL}cart`,
+      success_url: `${process.env.CLIENT_URL}/checkout-success`,
+      cancel_url: `${process.env.CLIENT_URL}/cart`,
       metadata: { userId },
     });
     res.json({ url: session.url });
