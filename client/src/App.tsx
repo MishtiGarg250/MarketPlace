@@ -27,29 +27,24 @@ function getAuthUser() {
 function App() {
   const location = useLocation();
   const hideNavbar = ["/login", "/signup"].includes(location.pathname);
-  const user = getAuthUser();
+  console.log("getAuthUser", getAuthUser());
   
-  const adminGuard = (element: React.ReactElement) => {
-    if (user && user.role === "admin") {
-      return <Navigate to="/admin" replace />;
-    }
-    return element;
-  };
+  
   return (
     <CartProvider>
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/about" element={<AboutPage/>}/>
         <Route path="/" element={<HomePage />} />
-        <Route path="/products" element={adminGuard(<ProductsPage />)} />
+        <Route path="/products" element={<ProductsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/products/:id" element={adminGuard(<ProductDetailPage />)} />
-        <Route path="/cart" element={adminGuard(<CartPage />)} />
+        <Route path="/products/:id" element={<ProductDetailPage />}/>
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/seller-dashboard" element={<SellerDashboardPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />
-        <Route path="/checkout-success" element={adminGuard(<CheckoutSuccess />)} />
+        <Route path="/checkout-success" element={<CheckoutSuccess />} />
         
       </Routes>
     </CartProvider>
