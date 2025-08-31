@@ -50,10 +50,6 @@ components:
         avatar:
           type: string
           example: "https://example.com/avatar.jpg"
-        status:
-          type: string
-          enum: ['Active','Suspended']
-          example: "Active"
         joinDate:
           type: string
           format: date-time
