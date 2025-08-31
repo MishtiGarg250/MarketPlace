@@ -28,7 +28,7 @@ exports.createStripeSession = async (req, res) => {
           name: item.productId.name,
           images: item.productId.images?.map(img => img.url) || [],
         },
-        unit_amount: Math.round(item.productId.price*feePercentage * 100),
+        unit_amount: Math.round(item.productId.price * 100),
       },
       quantity: item.quantity,
     }));
