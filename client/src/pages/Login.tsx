@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Link } from "react-router-dom"
-import { Eye, EyeOff, Lock, Mail, ShoppingCart } from "lucide-react"
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -141,6 +141,7 @@ export default function Login() {
                 >
                   <option value="buyer">Buyer</option>
                   <option value="seller">Seller</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
               <Button

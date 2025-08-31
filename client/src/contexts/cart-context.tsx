@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
 import api from "../api/api"
@@ -36,8 +34,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
     const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const platformFee = calculatePlatformFee(totalPrice, ASSIGNMENT_SEED)
-    const tax = totalPrice * 0.08 // 8% tax
-    const finalTotal = totalPrice + platformFee + tax
+    const finalTotal = totalPrice + platformFee
 
     return { totalItems, totalPrice, platformFee, finalTotal }
   }
@@ -136,7 +133,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (!raw) return
       try {
         const res = await api.get("/cart")
-        // Map backend cart to CartItem[]
+      
         const cartItems = (res.data || []).map((item: any) => ({
           id: item.productId._id,
           title: item.productId.name,
@@ -145,11 +142,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           seller: item.productId.sellerId || "",
           category: item.productId.category || "",
           quantity: item.quantity,
-          stock: 99 // TODO: get real stock if available
+          
         }))
         dispatch({ type: "LOAD_CART", payload: cartItems })
       } catch (error) {
-        // fallback: load from localStorage for guests
+        console.error("Failed to fetch cart:", error);
         const savedCart = localStorage.getItem("marketplace-cart")
         if (savedCart) {
           try {
@@ -171,7 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = async (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
     const raw = localStorage.getItem("auth")
     if (raw) {
-      // Logged in: sync with backend
+      
       try {
         await api.post("/cart", { productId: item.id, quantity: item.quantity || 1 })
         // Refetch cart
@@ -184,11 +181,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           seller: item.productId.sellerId || "",
           category: item.productId.category || "",
           quantity: item.quantity,
-          stock: 99
+  
         }))
         dispatch({ type: "LOAD_CART", payload: cartItems })
       } catch (error) {
         // fallback: local
+        console.log(error);
         dispatch({ type: "ADD_ITEM", payload: item })
       }
     } else {
@@ -200,13 +198,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const raw = localStorage.getItem("auth")
     if (raw) {
       try {
-        // Find cart item by productId
+        
         const res = await api.get("/cart")
         const cartItem = (res.data || []).find((item: any) => item.productId._id === id)
         if (cartItem) {
           await api.delete(`/cart/${cartItem._id}`)
         }
-        // Refetch cart
+        
         const res2 = await api.get("/cart")
         const cartItems = (res2.data || []).map((item: any) => ({
           id: item.productId._id,
@@ -216,10 +214,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           seller: item.productId.sellerId || "",
           category: item.productId.category || "",
           quantity: item.quantity,
-          stock: 99
+    
         }))
         dispatch({ type: "LOAD_CART", payload: cartItems })
       } catch (error) {
+        console.log(error)
         dispatch({ type: "REMOVE_ITEM", payload: id })
       }
     } else {
@@ -231,13 +230,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const raw = localStorage.getItem("auth")
     if (raw) {
       try {
-        // Find cart item by productId
+        
         const res = await api.get("/cart")
         const cartItem = (res.data || []).find((item: any) => item.productId._id === id)
         if (cartItem) {
           await api.put(`/cart/${cartItem._id}`, { quantity })
         }
-        // Refetch cart
+      
         const res2 = await api.get("/cart")
         const cartItems = (res2.data || []).map((item: any) => ({
           id: item.productId._id,
@@ -247,10 +246,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           seller: item.productId.sellerId || "",
           category: item.productId.category || "",
           quantity: item.quantity,
-          stock: 99
+          
         }))
         dispatch({ type: "LOAD_CART", payload: cartItems })
       } catch (error) {
+        console.log(error);
         dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
       }
     } else {
@@ -262,10 +262,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const raw = localStorage.getItem("auth")
     if (raw) {
       try {
-        // Remove all items from backend cart
+        
         const res = await api.get("/cart")
         await Promise.all((res.data || []).map((item: any) => api.delete(`/cart/${item._id}`)))
-        // Refetch cart
+  
         const res2 = await api.get("/cart")
         const cartItems = (res2.data || []).map((item: any) => ({
           id: item.productId._id,
@@ -275,10 +275,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           seller: item.productId.sellerId || "",
           category: item.productId.category || "",
           quantity: item.quantity,
-          stock: 99
+          
         }))
         dispatch({ type: "LOAD_CART", payload: cartItems })
       } catch (error) {
+        console.log(error);
         dispatch({ type: "CLEAR_CART" })
       }
     } else {

@@ -1,14 +1,11 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
-
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react"
-
 import { useCart } from "@/contexts/cart-context"
 import api from "../api/api"
+
 export default function CartPage(){
     function getAuthUser() {
       if (typeof window === "undefined") return null;
@@ -34,11 +31,10 @@ export default function CartPage(){
         navigate("/", { replace: true });
       }
     }, [user, navigate]);
-    const {state,removeItem,updateQuantity,clearCart}=useCart();
+    const {state,removeItem,updateQuantity}=useCart();
     const [isLoading,setIsLoading]=useState(false);
-    const platformFeeRate = 0.05;
-    const platformFee = state.totalPrice*platformFeeRate
-    const finalTotal= state.totalPrice +  platformFee
+    const platformFee = state.platformFee;
+    const finalTotal = state.finalTotal;
 
     const handleQuantityChange = (id: number, newQuantity: number)=>{
         if(newQuantity < 1) return;
@@ -50,18 +46,27 @@ export default function CartPage(){
         removeItem(id);
     }
     
-    const handleClearCart=()=>{
-        if (confirm("Are you sure you want to clear your cart?")) {
-      clearCart()
-    }
-    }
-
-
     const handleCheckout = async () => {
       setIsLoading(true);
       try {
+        
+        const backendCart = await api.get("/cart");
+        for (const item of backendCart.data || []) {
+          await api.delete(`/cart/${item._id}`);
+        }
+
+        
+        for (const item of state.items) {
+          await api.post("/cart", { 
+            productId: item.id, 
+            quantity: item.quantity 
+          });
+        }
+
+        
         const res = await api.post("/stripe/stripe-session");
         if (res.data && res.data.url) {
+          
           window.location.href = res.data.url;
         } else {
           alert("Failed to start checkout session.");
@@ -134,7 +139,7 @@ export default function CartPage(){
                       </div>
                       <div>
                         <div className="font-semibold text-gray-900 text-lg">{item.title}</div>
-                        <div className="text-sm text-gray-500">SKU: {item.id?.slice(-8)}</div>
+                        <div className="text-sm text-gray-500">SKU: {String(item.id).slice(-8)}</div>
                       </div>
                     </div>
                     <div className="col-span-2 text-center font-bold text-gray-900 text-lg">${item.price.toFixed(2)}</div>
@@ -207,46 +212,17 @@ export default function CartPage(){
                   <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                   Order Summary
                 </div>
-                <div className="text-gray-600 mb-6 text-sm">Enter your destination to get a shipping estimate</div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Country *</Label>
-                    <select className="w-full h-12 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 hover:bg-white focus:border-yellow-400 focus:ring-yellow-400 transition-colors">
-                      <option>United States</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">State/Province</Label>
-                    <select className="w-full h-12 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 hover:bg-white focus:border-yellow-400 focus:ring-yellow-400 transition-colors">
-                      <option>Please Select a region, state</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Zip/Postal Code</Label>
-                    <input 
-                      className="w-full h-12 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 hover:bg-white focus:border-yellow-400 focus:ring-yellow-400 transition-colors" 
-                      placeholder="Enter zip code" 
-                    />
-                  </div>
-                </div>
                 <div className="flex justify-between py-2 border-t mt-4">
                   <span>Sub-Total</span>
                   <span className="font-semibold">${state.totalPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between py-2">
-                  <span>Delivery Charges</span>
-                  <span className="font-semibold">$80.00</span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span>Coupan Discount</span>
-                  <span className="text-blue-600 cursor-pointer">Apply Coupan</span>
+                  <span>Platform Fee</span>
+                  <span className="font-semibold">${platformFee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between py-2 border-t mt-2 text-lg font-bold">
                   <span>Total</span>
-                  <span>${(state.totalPrice + 80).toFixed(2)}</span>
+                  <span>${finalTotal.toFixed(2)}</span>
                 </div>
               </div>
             </div>

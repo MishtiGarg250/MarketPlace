@@ -90,6 +90,7 @@ export default function ProfilePage() {
       const res = await api.get("/users/me")
       setUser(res.data.user)
     } catch (err: any) {
+      console.log(err)
       setError("Failed to update profile")
     }
   }
@@ -348,7 +349,7 @@ export default function ProfilePage() {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {favorites.map((product) => (
-                          <ProductCard key={product._id} className="group hover:shadow-lg transition-all duration-200 border border-gray-100 rounded-xl bg-white overflow-hidden">
+                          <ProductCard key={product._id} className="p-4 group hover:shadow-lg transition-all duration-200 border border-gray-100 rounded-xl bg-white overflow-hidden">
                             <ProductCardContent className="p-0">
                               <div className="relative">
                                 <a href={`/products/${product._id}`}>
@@ -367,7 +368,7 @@ export default function ProfilePage() {
                                 >
                                   <Heart className="h-4 w-4 fill-red-400 text-red-400" />
                                 </Button>
-                                <ProductCardDescription className="mb-3 text-gray-600">{product.category}</ProductCardDescription>
+                                <ProductCardDescription className="m-3 text-gray-600">{product.category}</ProductCardDescription>
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-xl font-bold text-yellow-600">${product.price}</span>
                                   <Badge className="bg-gray-100 text-gray-700 border-gray-200">{product.condition}</Badge>

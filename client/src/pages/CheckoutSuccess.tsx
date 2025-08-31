@@ -1,26 +1,31 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useCart } from "@/contexts/cart-context"
-import api from "../api/api"
 import { useNavigate } from "react-router-dom"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import api from "../api/api"
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate()
   const { clearCart } = useCart();
+  const hasRun = useRef(false);
+  
   useEffect(() => {
-    // Call backend to create transaction and clear cart
+    if (hasRun.current) return; 
+    hasRun.current = true;
+    
     const completeOrder = async () => {
       try {
-        await api.post("/stripe/mock-complete");
+        console.log("[FRONTEND] Calling checkout from success page");
+        await api.post("/checkout");
+        console.log("[FRONTEND] Checkout completed, clearing cart");
         clearCart();
       } catch (err) {
-        // Optionally handle error
-        // console.error("Order completion error", err);
+        console.error("Order completion error", err);
       }
     };
     completeOrder();
-  }, []);
+  }, []); // Empty dependency array
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">

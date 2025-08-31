@@ -1,7 +1,5 @@
-// Delete product handler
-
-
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import api from "../api/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,120 +18,39 @@ import {
   Star,
   Edit,
   Trash2,
-  Eye,
   BarChart3,
   Calendar,
   Shield,
   DollarSign,
   ShoppingBag,
+  Mail,
 } from "lucide-react"
+
 import { uploadProductImage } from "../api/api";
 
 export default function SellerDashboardPage() {
-  // Edit Profile state
+  const navigate = useNavigate();
+  
+  const [productImages, setProductImages] = useState<File[]>([]);
+  const [productImageUrls, setProductImageUrls] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [editProfileData, setEditProfileData] = useState({
     name: "",
     location: "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
-
-  // Open edit profile modal and prefill data
-  const handleOpenEditProfile = () => {
-    setEditProfileData({
-      name: sellerProfile?.name || "",
-      location: sellerProfile?.location || "",
-    });
-    setShowEditProfile(true);
-  };
-
-  // Save profile changes
-  const handleSaveProfile = async () => {
-    setSavingProfile(true);
-    setError("");
-    try {
-      await api.put(`/users/seller/${sellerProfile._id}`, {
-        name: editProfileData.name,
-        location: editProfileData.location,
-      });
-      setShowEditProfile(false);
-      // Refresh seller profile (only name and location)
-      const profRes = await api.get(`/users/seller/${sellerProfile._id}`);
-    } catch (err) {
-      setError("Failed to update seller profile");
-    } finally {
-      setSavingProfile(false);
-    }
-          {showEditProfile && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-yellow-50 bg-opacity-80">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
-                <button
-                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowEditProfile(false)}
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-                <h2 className="text-2xl font-bold mb-4 text-yellow-700">Edit Seller Profile</h2>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="seller-name" className="text-gray-700 font-medium">Name</Label>
-                    <Input
-                      id="seller-name"
-                      value={editProfileData.name}
-                      onChange={e => setEditProfileData({ ...editProfileData, name: e.target.value })}
-                      className="bg-gray-50 border-gray-200 focus:border-yellow-400 text-gray-900"
-                      placeholder="Enter seller name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="seller-location" className="text-gray-700 font-medium">Location</Label>
-                    <Input
-                      id="seller-location"
-                      value={editProfileData.location}
-                      onChange={e => setEditProfileData({ ...editProfileData, location: e.target.value })}
-                      className="bg-gray-50 border-gray-200 focus:border-yellow-400 text-gray-900"
-                      placeholder="Enter location"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3 pt-6">
-                  <Button
-                    onClick={handleSaveProfile}
-                    className="bg-yellow-500 text-white font-semibold hover:bg-yellow-600 px-6"
-                    disabled={savingProfile}
-                  >
-                    {savingProfile ? "Saving..." : "Save Changes"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEditProfile(false)}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-                {error && <div className="text-red-500 mt-3">{error}</div>}
-              </div>
-            </div>
-          )}
-  };
-  // Helper for status badge color
-  function getStatusColor(status: string) {
-    switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-700";
-      case "Out of Stock":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  }
+  const [features, setFeatures] = useState<string[]>([]);
+  const [featureInput, setFeatureInput] = useState("");
+  const [user, setUser] = useState<any>(null)
+  const [sellerProfile, setSellerProfile] = useState<any>(null)
+  const [analytics, setAnalytics] = useState<any>(null)
+  const [orders, setOrders] = useState<any[]>([])
+  const [reviews,setReviews] = useState<any[]>([])
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [products, setProducts] = useState<any[]>([])
   const [soldCounts, setSoldCounts] = useState<{ [productId: string]: number }>({});
-  const [productReviews, setProductReviews] = useState<{ [productId: string]: any[] }>({});
-  const [loading, setLoading] = useState(false)
+ const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -144,111 +61,218 @@ export default function SellerDashboardPage() {
     condition: "New",
     location: "",
   })
-  const [productImages, setProductImages] = useState<File[]>([]);
-  const [productImageUrls, setProductImageUrls] = useState<string[]>([]);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  // Features state
-  const [features, setFeatures] = useState<string[]>([]);
-  const [featureInput, setFeatureInput] = useState("");
-  const [user, setUser] = useState<any>(null)
-  const [sellerProfile, setSellerProfile] = useState<any>(null)
-  const [analytics, setAnalytics] = useState<any>(null)
-  const [orders, setOrders] = useState<any[]>([])
-  const [reviews,setReviews] = useState<any[]>([])
- 
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        let userRes;
-        try {
-          userRes = await api.get("/users/me");
-        } catch (err) {
-          console.error("Failed to fetch /users/me", err);
-          setError("Failed to fetch user info");
-          setLoading(false);
-          return;
-        }
-        setUser(userRes.data.user);
-        const sellerId = userRes.data.user?._id;
-        if (sellerId) {
-          let prodRes, profRes, anaRes, ordRes, revRes;
-          try {
-            [prodRes, profRes, anaRes, ordRes, revRes] = await Promise.all([
-              api.get(`/products?sellerId=${sellerId}&limit=100`),
-              api.get(`/users/seller/${sellerId}`),
-              api.get(`/products/seller/${sellerId}/analytics`),
-              api.get(`/products/seller/${sellerId}/orders`),
-              api.get(`/users/seller/${sellerId}/reviews`),
-            ]);
-          } catch (err) {
-            console.error("Failed to fetch one of the seller endpoints", err);
-            setError("Failed to fetch seller details");
-            setLoading(false);
-            return;
-          }
-          setProducts(prodRes.data.products);
-          setSellerProfile(profRes.data);
-          setAnalytics(anaRes.data);
-          setOrders(ordRes.data);
-          setReviews(revRes.data);
-          if (typeof setEditProfileData === 'function') {
-            setEditProfileData({
-              name: profRes.data.name || "",
-              // description removed
-              avatar: profRes.data.avatar || "",
-              location: profRes.data.location || "",
-            });
-          }
-          // Fetch reviews for each product
-          const reviewsObj: { [productId: string]: any[] } = {};
-          await Promise.all(
-            prodRes.data.products.map(async (product: any) => {
-              try {
-                const res = await api.get(`/reviews/product/${product._id}`);
-                reviewsObj[product._id] = res.data;
-              } catch (err) {
-                console.error(`Failed to fetch reviews for product ${product._id}`, err);
-                reviewsObj[product._id] = [];
-              }
-            })
-          );
-          setProductReviews(reviewsObj);
-          // Calculate sold count for each product from orders
-          const soldMap: { [productId: string]: number } = {};
-          ordRes.data.forEach((order: any) => {
-            order.items.forEach((item: any) => {
-              const pid = item.productId && item.productId._id ? item.productId._id : item.productId;
-              if (pid) {
-                soldMap[pid] = (soldMap[pid] || 0) + (item.quantity || 0);
-              }
-            });
-          });
-          setSoldCounts(soldMap);
-        } else {
-          setProducts([]);
-        }
-      } catch (err) {
-        console.error("Unknown error in fetchAll", err);
-        setError("Failed to fetch seller data");
+  
+   const handleAddProduct = async () => {
+    setError("");
+    try {
+      let imageArr: { url: string }[] = [];
+      if (productImages.length > 0) {
+        setUploadingImage(true);
+        const uploadResults = await Promise.all(
+          productImages.map(async (file) => {
+            const uploadRes = await uploadProductImage(file);
+            return uploadRes && uploadRes.url ? { url: uploadRes.url } : null;
+          })
+        );
+        setUploadingImage(false);
+        imageArr = uploadResults.filter(Boolean) as { url: string }[];
       }
-      setLoading(false);
-    };
-    fetchAll();
-  }, [])
-
+      
+      const payload = {
+        name: newProduct.name,
+        description: newProduct.description,
+        price: Number(newProduct.price),
+        quantity: Number(newProduct.quantity),
+        category: newProduct.category,
+        condition: newProduct.condition,
+        location: newProduct.location,
+        images: imageArr,
+        features,
+    
+      };
+      await api.post("/products", payload);
+      setShowAddProduct(false);
+      setNewProduct({
+        name: "",
+        description: "",
+        price: "",
+        quantity: "",
+        category: "",
+        condition: "New",
+        location: "",
+      });
+      setProductImages([]);
+      setProductImageUrls([]);
+      setFeatures([]);
+      setFeatureInput("");
+      
+    
+      if (user?._id) {
+        const res = await api.get(`/products?sellerId=${user._id}&limit=100`);
+        setProducts(res.data.products);
+      }
+    } catch (error) {
+      console.log(error)
+      setUploadingImage(false);
+    }
+  };
   const handleDeleteProduct = async (productId: string) => {
     setError("");
     try {
       await api.delete(`/products/${productId}`);
       setProducts(products.filter((p) => p._id !== productId));
     } catch (err) {
+      console.log(err)
       setError("Failed to delete product");
     }
   };
 
-  // Main render
+  const handleToggleFeatured = async (productId: string) => {
+    try {
+      const res = await api.put(`/products/${productId}/feature`);
+      // Update the product in the local state
+      setProducts(products.map(p => 
+        p._id === productId 
+          ? { ...p, isFeatured: res.data.product.isFeatured }
+          : p
+      ));
+    } catch (err) {
+      console.error("Failed to toggle featured status", err);
+      setError("Failed to update featured status");
+    }
+  };
+  function getStatusColor(status: string) {
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-700";
+      case "Out of Stock":
+        return "bg-red-100 text-red-700";
+     
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
+  }
+  
+
+  const handleOpenEditProfile = () => {
+    setEditProfileData({
+      name: sellerProfile?.name || "",
+      location: sellerProfile?.location || "",
+    });
+    setShowEditProfile(true);
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    setError("");
+    try {
+      await api.put(`/users/seller/${sellerProfile._id}`, {
+        name: editProfileData.name,
+        location: editProfileData.location,
+      });
+      setShowEditProfile(false);
+      await api.get(`/users/seller/${sellerProfile._id}`);
+    } catch (err) {
+      console.log(err)
+      setError("Failed to update seller profile");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+  
+ 
+  const fetchAll = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      let userRes;
+      try {
+        userRes = await api.get("/users/me");
+      } catch (err) {
+        console.error("Failed to fetch /users/me", err);
+        setError("Failed to fetch user info");
+        setLoading(false);
+        return;
+      }
+      setUser(userRes.data.user);
+      const sellerId = userRes.data.user?._id;
+      if (sellerId) {
+        let prodRes, profRes, anaRes, ordRes, revRes;
+        try {
+          [prodRes, profRes, anaRes, ordRes, revRes] = await Promise.all([
+            api.get(`/products?sellerId=${sellerId}&limit=100`),
+            api.get(`/users/seller/${sellerId}`),
+            api.get(`/products/seller/${sellerId}/analytics`),
+            api.get(`/products/seller/${sellerId}/orders`),
+            api.get(`/users/seller/${sellerId}/reviews`),
+          ]);
+        } catch (err) {
+          console.error("Failed to fetch one of the seller endpoints", err);
+          setError("Failed to fetch seller details");
+          setLoading(false);
+          return;
+        }
+        setProducts(prodRes.data.products);
+        setSellerProfile(profRes.data);
+        setAnalytics(anaRes.data);
+        setOrders(ordRes.data);
+        setReviews(revRes.data);
+        if (typeof setEditProfileData === 'function') {
+          setEditProfileData({
+            name: profRes.data.name || "",
+            location: profRes.data.location || "",
+          });
+        }
+
+        const reviewsObj: { [productId: string]: any[] } = {};
+        await Promise.all(
+          prodRes.data.products.map(async (product: any) => {
+            try {
+              const res = await api.get(`/reviews/product/${product._id}`);
+              reviewsObj[product._id] = res.data;
+            } catch (err) {
+              console.error(`Failed to fetch reviews for product ${product._id}`, err);
+              reviewsObj[product._id] = [];
+            }
+          })
+        );
+     
+  
+        const soldMap: { [productId: string]: number } = {};
+        ordRes.data.forEach((order: any) => {
+          order.items.forEach((item: any) => {
+            const pid = item.productId && item.productId._id ? item.productId._id : item.productId;
+            if (pid) {
+              soldMap[pid] = (soldMap[pid] || 0) + (item.quantity || 0);
+            }
+          });
+        });
+        setSoldCounts(soldMap);
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      console.error("Unknown error in fetchAll", err);
+      setError("Failed to fetch seller data");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  // Auto-refresh every 30 seconds to show updated stock level
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user?._id) {
+        fetchAll();
+      }
+    }, 30000); 
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   return (
     <div className="container mx-auto py-8 px-2 md:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -281,7 +305,7 @@ export default function SellerDashboardPage() {
               </Button>
             </div>
             <CardContent className="p-6">
-              {/* Description removed as requested */}
+              
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-black/70">
                   <Calendar className="h-4 w-4 text-yellow-600" />
@@ -315,7 +339,7 @@ export default function SellerDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Edit Profile Modal */}
+        
           {showEditProfile && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
               <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md relative">
@@ -338,8 +362,7 @@ export default function SellerDashboardPage() {
                       placeholder="Enter seller name"
                     />
                   </div>
-                  {/* Description field removed as requested */}
-                  {/* Avatar field removed */}
+                 
                   <div>
                     <Label htmlFor="seller-location" className="text-gray-700 font-medium">Location</Label>
                     <Input
@@ -377,7 +400,47 @@ export default function SellerDashboardPage() {
           <div>
             <Tabs defaultValue="products" className="space-y-6">
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-2">
-                <TabsList className="grid w-full grid-cols-3 rounded-xl overflow-hidden bg-gray-100 p-1 h-16">
+                <TabsList className="grid w-full grid-cols-4 rounded-xl overflow-hidden bg-gray-100 p-1 h-16">
+                  <TabsTrigger 
+                    value="inbox" 
+                    className="flex items-center justify-center gap-3 font-semibold text-sm data-[state=active]:bg-white data-[state=active]:text-yellow-600 data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 py-4 px-6 rounded-lg transition-all duration-300 hover:bg-gray-50 data-[state=inactive]:hover:bg-gray-50 group cursor-pointer"
+                    onClick={() => navigate('/seller-chat')}
+                  >
+                    <Mail className="h-5 w-5 group-data-[state=active]:scale-110 transition-transform duration-200" />
+                    <span className="hidden sm:inline">Messages</span>
+                  </TabsTrigger>
+              {/* Messages Tab: Redirect to Dedicated Chat */}
+              <TabsContent value="inbox" className="space-y-6">
+                <Card className="rounded-2xl border-0 shadow-lg bg-white">
+                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl border-b border-green-100 px-8 py-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <Mail className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl text-gray-900">Customer Messages</CardTitle>
+                        <CardDescription className="text-gray-600">Access your dedicated chat interface</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="text-center py-12">
+                      <Mail className="h-16 w-16 text-green-500 mx-auto mb-6" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-3">Chat with Your Customers</h3>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        Use our dedicated chat interface to communicate with customers about your products in real-time.
+                      </p>
+                      <Button 
+                        onClick={() => navigate('/seller-chat')}
+                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 text-lg rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+                      >
+                        <Mail className="h-5 w-5 mr-2" />
+                        Open Chat Interface
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
                   <TabsTrigger 
                     value="products" 
                     className="flex items-center justify-center gap-3 font-semibold text-sm data-[state=active]:bg-white data-[state=active]:text-yellow-600 data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 py-4 px-6 rounded-lg transition-all duration-300 hover:bg-gray-50 data-[state=inactive]:hover:bg-gray-50 group"
@@ -454,6 +517,7 @@ export default function SellerDashboardPage() {
                               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Name</th>
                               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Category</th>
                               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Status</th>
+                              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Featured</th>
                               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Price</th>
                               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Stock</th>
                               <th className="px-6 py-4 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Sold</th>
@@ -476,6 +540,19 @@ export default function SellerDashboardPage() {
                                   <Badge className={`${getStatusColor(product.status || (product.quantity === 0 ? "Out of Stock" : "Active"))} rounded-full px-3 py-1 font-semibold text-xs border`}>
                                     {product.status || (product.quantity === 0 ? "Out of Stock" : "Active")}
                                   </Badge>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Button
+                                    variant={product.isFeatured ? "default" : "outline"}
+                                    size="sm"
+                                    className={`${product.isFeatured 
+                                      ? "bg-yellow-500 text-white hover:bg-yellow-600" 
+                                      : "border-yellow-300 text-yellow-600 hover:bg-yellow-50"
+                                    } px-3 py-1 text-xs font-semibold`}
+                                    onClick={() => handleToggleFeatured(product._id)}
+                                  >
+                                    {product.isFeatured ? "Featured" : "Feature"}
+                                  </Button>
                                 </td>
                                 <td className="px-6 py-4 text-yellow-600 font-semibold">${product.price}</td>
                                 <td className="px-6 py-4 text-gray-600">{product.quantity}</td>
@@ -691,7 +768,6 @@ export default function SellerDashboardPage() {
           </div >
         </div >
 
-    {/* Add Product Modal */ }
   {
     showAddProduct && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

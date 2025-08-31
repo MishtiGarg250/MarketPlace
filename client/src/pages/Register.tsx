@@ -35,12 +35,13 @@ export default function Register() {
     }
     setIsLoading(true);
     try {
-      const res = await api.post("/users/register", {
+      await api.post("/users/register", {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         role: formData.role
       });
+      
       setSuccess("Account created successfully! Please login.");
     
       setFormData({
@@ -145,7 +146,6 @@ export default function Register() {
                     <SelectContent>
                       <SelectItem value="buyer">Buyer - I want to purchase items</SelectItem>
                       <SelectItem value="seller">Seller - I want to sell items</SelectItem>
-                      <SelectItem value="admin">Admin - Platform administrator</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

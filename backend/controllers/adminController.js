@@ -1,7 +1,19 @@
+
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 
+exports.getOrders = async (req, res) => {
+  try {
+    const orders = await Transaction.find()
+      .populate('buyer', 'name email')
+      .populate('items.productId', 'name images price')
+      .populate('items.seller', 'name email');
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ msg: 'Error fetching orders' });
+  }
+};
 
 exports.getStats = async (req, res) => {
   try {
@@ -35,7 +47,7 @@ exports.getUsers = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find()
     res.json(products);
   } catch (err) {
     res.status(500).json({ msg: 'Error fetching products' });

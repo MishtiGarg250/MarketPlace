@@ -16,13 +16,16 @@ function getAuthUser() {
   }
 }
 
+import { useNavigate } from "react-router-dom";
+
 export default function Navbar() {
   const user = getAuthUser();
   const { state } = useCart();
   const location = useLocation();
+  const navigate = useNavigate();
   function handleLogout() {
     localStorage.removeItem("auth");
-    window.location.reload();
+    navigate("/login");
   }
   return (
     <nav className="w-full bg-white flex items-center justify-between px-8 py-4 shadow-sm">
@@ -32,8 +35,8 @@ export default function Navbar() {
           <span className="text-yellow-400">DEAL</span> <span className="text-black">PERFECT</span>
         </Link>
       </div>
-      {/* Nav Links - only Home, Products, Cart */}
-  <div className="flex-1 flex justify-center gap-10">
+      {/* Nav Links - Home and Admin Dashboard for admin, else normal links */}
+      <div className="flex-1 flex justify-center gap-10">
         <Link
           to="/"
           className={`text-black text-lg font-medium hover:underline ${location.pathname === '/' ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
@@ -41,19 +44,38 @@ export default function Navbar() {
           Home
         </Link>
         <Link
-          to="/products"
-          className={`text-black text-lg font-medium hover:underline ${location.pathname.startsWith('/products') ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
+          to="/about"
+          className={`text-black text-lg font-medium hover:underline ${location.pathname === '/about' ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
         >
-          Products
+          About
         </Link>
-        {/* Cart link only for buyers or guests */}
-        {(!user || user.role !== 'seller') && (
+        {user && user.role === 'admin' ? (
           <Link
-            to="/cart"
-            className={`text-black text-lg font-medium hover:underline ${location.pathname.startsWith('/cart') ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
+            to="/admin"
+            className={`text-black text-lg font-medium hover:underline ${location.pathname.startsWith('/admin') ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
           >
-            Cart
+            Admin Dashboard
           </Link>
+        ) : (
+          <>
+            <Link
+              to="/products"
+              className={`text-black text-lg font-medium hover:underline ${location.pathname.startsWith('/products') ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
+            >
+              Products
+            </Link>
+            {/* Chat link for all logged-in users except admin */}
+          
+            {/* Cart link only for buyers or guests */}
+            {(!user || user.role !== 'seller') && (
+              <Link
+                to="/cart"
+                className={`text-black text-lg font-medium hover:underline ${location.pathname.startsWith('/cart') ? 'underline underline-offset-4 decoration-yellow-400 font-bold' : ''}`}
+              >
+                Cart
+              </Link>
+            )}
+          </>
         )}
       </div>
       {/* Icons and User Info */}
@@ -61,7 +83,7 @@ export default function Navbar() {
         {user ? (
           <>
             <div className="flex flex-col items-end mr-2">
-              {user.name && (
+              {user.name && user.role !== 'admin' && (
                 <Link
                   to={user.role === "seller" ? "/seller-dashboard" : "/profile"}
                   className="text-black font-semibold text-base hover:underline cursor-pointer"
@@ -73,8 +95,8 @@ export default function Navbar() {
                 <span className="text-xs text-yellow-600 font-medium capitalize">{user.role}</span>
               )}
             </div>
-            {/* Cart icon only for buyers or guests */}
-            {user.role !== 'seller' && (
+            {/* Cart icon only for buyers or guests, not admin */}
+            {user.role !== 'seller' && user.role !== 'admin' && (
               <Link to="/cart" className="relative">
                 <ShoppingCart className="h-7 w-7 text-black" />
                 {state.totalItems > 0 && (

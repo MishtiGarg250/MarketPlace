@@ -9,7 +9,7 @@ export default function AboutPage() {
     <div className="min-h-screen bg-background py-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="font-space-grotesk text-4xl font-bold text-foreground mb-4">About Our Marketplace</h1>
+          <h1 className="font-poppins text-4xl font-bold text-foreground mb-4">About Our Marketplace</h1>
           <p className="text-xl text-muted-foreground">
             Connecting buyers and sellers in a vibrant digital marketplace
           </p>
@@ -18,7 +18,7 @@ export default function AboutPage() {
         
         <Card className="mb-8 border-2" style={{ borderColor: seedColor }}>
           <CardHeader className="text-center">
-            <CardTitle className="font-space-grotesk text-2xl">Assignment Seed</CardTitle>
+            <CardTitle className="font-poppins text-2xl">Assignment Seed</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <Badge className="text-lg px-6 py-2 text-white font-mono" style={{ backgroundColor: seedColor }}>
@@ -33,7 +33,7 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Card>
             <CardHeader>
-              <CardTitle className="font-space-grotesk">Our Mission</CardTitle>
+              <CardTitle className="font-poppins">Our Mission</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -46,22 +46,22 @@ export default function AboutPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="font-space-grotesk">Key Features</CardTitle>
+              <CardTitle className="font-poppins">Key Features</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-muted-foreground">
                 <li>• Secure payment processing</li>
                 <li>• Advanced search and filtering</li>
                 <li>• Seller dashboard and analytics</li>
-                <li>• Mobile-responsive design</li>
-                <li>• Real-time notifications</li>
+                <li>• Admin Dashboard with full analysis</li>
+                <li>• Rate and Review system</li>
               </ul>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="font-space-grotesk">For Buyers</CardTitle>
+              <CardTitle className="font-poppins">For Buyers</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -73,7 +73,7 @@ export default function AboutPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="font-space-grotesk">For Sellers</CardTitle>
+              <CardTitle className="font-poppins">For Sellers</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -86,7 +86,7 @@ export default function AboutPage() {
 
         <Card className="mt-8 text-center">
           <CardContent className="py-8">
-            <h3 className="font-space-grotesk text-xl font-semibold mb-4">Dynamic Theme Color</h3>
+            <h3 className="font-poppins text-xl font-semibold mb-4">Dynamic Theme Color</h3>
             <div className="w-16 h-16 rounded-full mx-auto mb-4" style={{ backgroundColor: seedColor }}></div>
             <p className="text-muted-foreground">
               Generated from our assignment seed: <code className="bg-muted px-2 py-1 rounded">{ASSIGNMENT_SEED}</code>

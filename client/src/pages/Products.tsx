@@ -2,12 +2,12 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Star, Heart, Filter, Grid, List, Search,ShoppingCart } from "lucide-react"
+import { Star, Heart, Search,ShoppingCart } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
+import { Link } from "react-router-dom";
+import api, { addFavorite, removeFavorite, getFavorites } from "@/api/api"
 
 function getAuthUser() {
   if (typeof window === "undefined") return null;
@@ -20,13 +20,11 @@ function getAuthUser() {
   }
 }
 
-import { Link } from "react-router-dom";
-import api, { addFavorite, removeFavorite, getFavorites } from "@/api/api"
 
 
 
-const categories = ["All", "Electronics", "Fashion", "Food", "Home", "Beauty"]
-const conditions = ["All","New","Used"]
+const categories = ["Category", "Electronics", "Fashion", "Food", "Home", "Beauty"]
+const conditions = ["Condition","New","Used"]
 const sortOptions = [
   { value: "newest", label: "Newest First" },
   { value: "price-low", label: "Price: Low to High" },
@@ -66,28 +64,16 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  const [selectedCondition, setSelectedCondition] = useState("All")
-  const [priceRange, setPriceRange] = useState([0, 500])
+  const [selectedCategory, setSelectedCategory] = useState("Category")
+  const [selectedCondition, setSelectedCondition] = useState("Condition")
   const [sortBy, setSortBy] = useState("newest")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [showFilters, setShowFilters] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [userLocation, setUserLocation] = useState<string>("");
   const [allLocations, setAllLocations] = useState<string[]>([]);
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
-  // Fetch user location from profile and all seller locations
+  // Fetch all seller locations
   useEffect(() => {
     const fetchLocations = async () => {
-      if (user) {
-        try {
-          const res = await api.get("/users/me");
-          setUserLocation(res.data.user.location || "");
-        } catch {
-          setUserLocation("");
-        }
-      }
-      // Fetch all seller locations
       try {
         const res = await api.get("/users?role=seller&fields=location");
         const locations = (res.data.users || []).map((u: any) => u.location).filter(Boolean);
@@ -107,6 +93,9 @@ export default function ProductsPage() {
         if (selectedLocation && selectedLocation !== "all") {
           url += `&location=${encodeURIComponent(selectedLocation)}`;
         }
+        if (showFeaturedOnly) {
+          url += "&featured=true";
+        }
         const res = await api.get(url);
         setProducts(res.data.products || [])
       } catch (err) {
@@ -117,7 +106,7 @@ export default function ProductsPage() {
       }
     }
     fetchProducts()
-  }, [selectedLocation])
+  }, [selectedLocation, showFeaturedOnly])
 
   const filteredProducts = useMemo(() => {
     let filtered = products.map((product) => ({
@@ -139,10 +128,9 @@ export default function ProductsPage() {
       const matchesSearch =
         product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory
-      const matchesCondition = selectedCondition === "All" || product.condition === selectedCondition
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
-      return matchesSearch && matchesCategory && matchesCondition && matchesPrice
+      const matchesCategory = selectedCategory === "Category" || product.category === selectedCategory
+      const matchesCondition = selectedCondition === "Condition" || product.condition === selectedCondition
+      return matchesSearch && matchesCategory && matchesCondition
     })
 
     switch (sortBy) {
@@ -159,11 +147,11 @@ export default function ProductsPage() {
         filtered.sort((a, b) => b.reviews - a.reviews)
         break
       default:
-        filtered.sort((a, b) => 0)
+        // No sorting for newest
         break
     }
     return filtered
-  }, [products, searchQuery, selectedCategory, selectedCondition, priceRange, sortBy])
+  }, [products, searchQuery, selectedCategory, selectedCondition, sortBy])
 
   const handleAddToCart = (product: any) => {
     if (!user) {
@@ -181,7 +169,7 @@ export default function ProductsPage() {
       image: product.image,
       seller: product.seller,
       category: product.category,
-      stock: product.stock,
+      stock: product.quantity,
     })
   }
 
@@ -216,8 +204,7 @@ export default function ProductsPage() {
 
           {/* Enhanced Filter Controls */}
           <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            {/* Location Filter */}
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
               <SelectTrigger className="w-40 border-gray-200 focus:border-yellow-400 focus:ring-yellow-400">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
@@ -228,6 +215,7 @@ export default function ProductsPage() {
                 ))}
               </SelectContent>
             </Select>
+            
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-40 border-gray-200 focus:border-yellow-400 focus:ring-yellow-400">
                 <SelectValue placeholder="Category" />
@@ -266,36 +254,25 @@ export default function ProductsPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Featured Products Toggle */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={showFeaturedOnly}
+                onChange={(e) => setShowFeaturedOnly(e.target.checked)}
+                className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+              />
+              <label htmlFor="featured" className="text-sm font-medium text-gray-700">
+                Featured Products Only
+              </label>
+            </div>
           </div>
 
-          {/* Advanced Filters */}
-          {showFilters && (
-            <Card className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Condition</label>
-                  <Select value={selectedCondition} onValueChange={setSelectedCondition}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {conditions.map((condition) => (
-                        <SelectItem key={condition} value={condition}>
-                          {condition}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium mb-2 block">
-                    Price Range: ${priceRange[0]} - ${priceRange[1]}
-                  </label>
-                  <Slider value={priceRange} onValueChange={setPriceRange} max={500} step={10} className="mt-2" />
-                </div>
-              </div>
-            </Card>
-          )}
+         
+         
+            
         </div>
 
         {/* Enhanced Results Count */}
@@ -320,7 +297,7 @@ export default function ProductsPage() {
             <p className="text-lg text-gray-600 font-medium">Loading amazing products...</p>
             <p className="text-sm text-gray-500 mt-2">Please wait while we fetch the best deals for you</p>
           </div>
-        ) : viewMode === "grid" ? (
+        ) :  (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <div
@@ -329,7 +306,7 @@ export default function ProductsPage() {
               >
                 {/* Enhanced Badge */}
                 <div className="absolute left-4 top-4 z-10">
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                  <Badge className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                     {product.category?.toUpperCase()}
                   </Badge>
                 </div>
@@ -391,7 +368,7 @@ export default function ProductsPage() {
                     <Button
                       size="sm"
                       onClick={() => handleAddToCart(product)}
-                      className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                      className="flex-1 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                       disabled={product.stock === 0}
                     >
                       <ShoppingCart className="h-4 w-4 mr-2" />
@@ -416,66 +393,7 @@ export default function ProductsPage() {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex gap-6">
-                    <div className="relative flex-shrink-0">
-                      <Link to={`/products/${product.id}`}>
-                        <img
-                          src={product.image || "/placeholder.svg"}
-                          alt={product.title}
-                          className="w-32 h-32 object-cover rounded-lg group-hover:scale-105 transition-transform"
-                        />
-                      </Link>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="absolute top-2 right-2 bg-background/80 hover:bg-background"
-                        onClick={() => handleToggleFavorite(product.id)}
-                        aria-label={favoriteIds.includes(product.id) ? "Remove from favorites" : "Add to favorites"}
-                      >
-                        <Heart className={`h-4 w-4 ${favoriteIds.includes(product.id) ? "fill-red-500 text-red-500" : ""}`} />
-                      </Button>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <Link to={`/products/${product.id}`}>
-                            <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
-                              {product.title}
-                            </h3>
-                          </Link>
-                          <p className="text-muted-foreground">by {product.seller}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge className="bg-primary text-primary-foreground">{product.category}</Badge>
-                          {product.condition === "Used" && <Badge variant="secondary">Used</Badge>}
-                        </div>
-                      </div>
-                      <p className="text-muted-foreground mb-4">{product.description}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <span className="text-2xl font-bold text-primary">${product.price}</span>
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="ml-1 text-sm text-muted-foreground">
-                              {product.rating} ({product.reviews} reviews)
-                            </span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">{product.location}</span>
-                        </div>
-                        <Button onClick={() => handleAddToCart(product)}>Add to Cart</Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        ) }
 
         {/* No Results */}
         {filteredProducts.length === 0 && (

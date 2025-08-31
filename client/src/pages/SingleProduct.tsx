@@ -10,7 +10,7 @@ function getAuthUser() {
 }
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link} from "react-router-dom";
 import { useParams } from "react-router-dom";
 import api from "../api/api";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default function ProductDetailPage(){
         const res = await api.get(`/products?id=${id}`);
         const prod = res.data.product;
         setProduct(prod);
-        // Fetch related products by category (excluding current product)
+      
         if (prod && prod.category) {
           const relatedRes = await api.get(`/products?limit=8&category=${encodeURIComponent(prod.category)}`);
           const related = (relatedRes.data.products || []).filter((p: any) => p._id !== prod._id);
@@ -131,6 +131,11 @@ export default function ProductDetailPage(){
     setReviewLoading(false);
   };
 
+  const handleStartChat = async () => {
+    alert("This feature is not available at this time. Please contact us for more information.")
+     
+  };
+
   if (!product) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
@@ -157,7 +162,7 @@ export default function ProductDetailPage(){
               />
             </div>
             <div className="flex gap-3 w-full justify-center">
-              {product.images?.map((img, idx: number) => (
+              {product.images?.map((img: any, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
@@ -258,6 +263,14 @@ export default function ProductDetailPage(){
                 onClick={handleAddToCart}
               >
                 ADD TO CART
+              </Button>
+              <Button
+                className="bg-blue-500 text-white font-bold px-8 py-3 rounded-lg shadow hover:bg-blue-600 transition"
+                onClick={handleStartChat}
+                disabled={!user || user._id === product.sellerId}
+                style={{ minWidth: 150 }}
+              >
+                {!user ? 'Login to Chat' : user._id === product.sellerId ? 'Your Product' : 'Message Seller'}
               </Button>
               <Button
                 variant="ghost"

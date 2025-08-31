@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const {protect, authorize} = require("../middleware/auth");
@@ -9,7 +8,7 @@ const{
     getProducts,
     updateProduct,
     deleteProduct,
-    markFeatured
+    toggleFeatured
 } = require("../controllers/productController");
 
 router.post("/upload", protect, authorize("seller"), (req, res, next) => {
@@ -40,7 +39,7 @@ router.get("/:id", async (req, res) => {
 router.post("/", protect, authorize("seller"), createProduct); 
 router.put("/:id", protect, authorize("seller"), updateProduct);
 router.delete("/:id", protect, authorize("seller"), deleteProduct);
-router.put("/:id/feature", protect, authorize("seller"), markFeatured);
+router.put("/:id/feature", protect, authorize("seller"), toggleFeatured);
 
 router.get("/seller/:sellerId/analytics", getSellerAnalytics);
 router.get("/seller/:sellerId/orders", getSellerOrders);

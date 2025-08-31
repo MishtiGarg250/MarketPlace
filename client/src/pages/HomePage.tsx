@@ -31,18 +31,22 @@ export default function HomePage() {
             Buy and sell with ease. <span className="text-yellow-500 font-semibold">List your products</span> or discover great deals—everything in one marketplace.
           </p>
           <div className="flex gap-4 flex-wrap">
-            <Button className="rounded-full bg-black text-yellow-400 px-8 py-3 text-lg font-semibold border-2 border-black hover:bg-yellow-400 hover:text-black">
+            <a href="/login">
+              <Button className="rounded-full bg-black text-yellow-400 px-8 py-3 text-lg font-semibold border-2 border-black hover:bg-yellow-400 hover:text-black">
               Start Shopping <span className="ml-2">→</span>
             </Button>
-            <Button variant="outline" className="rounded-full border-2 border-black text-black px-8 py-3 text-lg font-semibold bg-white hover:bg-black hover:text-yellow-400">
+            </a>
+           <a href="/login">
+             <Button variant="outline" className="rounded-full border-2 border-black text-black px-8 py-3 text-lg font-semibold bg-white hover:bg-black hover:text-yellow-400">
               Sell Your Product <span className="ml-2">→</span>
             </Button>
+           </a>
           </div>
         </div>
         {/* Right: Hero Image(s) */}
         <div className="flex-1 flex items-center justify-center mt-12 md:mt-0">
           {/* Example marketplace hero image, replace with your own */}
-          <img src="/marketplace-hero.png" alt="Marketplace" className="w-[350px] h-[350px] object-contain drop-shadow-2xl" />
+          <img src="/landing.avif" alt="Marketplace" className="w-[500px] h-[500px] object-contain drop-shadow-2xl" />
         </div>
         {/* Decorative yellow clouds (optional) */}
         <div className="absolute top-10 left-1/3 w-32 h-20 bg-yellow-200/80 rounded-full blur-2xl" style={{zIndex:0}}></div>

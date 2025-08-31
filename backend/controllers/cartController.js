@@ -7,15 +7,30 @@ exports.addToCart = async(req,res)=>{
     const {productId, quantity} = req.body;
     const product = await Product.findById(productId);
     if(!product) return res.status(404).json({msg:"Product not found"});
+    
+    // Check if product is in stock
+    if(product.quantity <= 0) {
+      return res.status(400).json({msg:"Product is out of stock"});
+    }
+    
     let cartItem = await Cart.findOne({userId:req.user._id, productId});
+    const requestedQuantity = quantity || 1;
+    
     if(cartItem){
-      cartItem.quantity += quantity || 1;
+      const totalQuantity = cartItem.quantity + requestedQuantity;
+      if(totalQuantity > product.quantity) {
+        return res.status(400).json({msg:`Only ${product.quantity} items available in stock`});
+      }
+      cartItem.quantity += requestedQuantity;
       await cartItem.save();
     }else{
+      if(requestedQuantity > product.quantity) {
+        return res.status(400).json({msg:`Only ${product.quantity} items available in stock`});
+      }
       cartItem = await Cart.create({
         userId: req.user._id,
         productId,
-        quantity: quantity || 1,
+        quantity: requestedQuantity,
       });
     }
     res.status(201).json(cartItem);
