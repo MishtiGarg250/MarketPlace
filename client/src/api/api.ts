@@ -1,8 +1,7 @@
-
+import axios from "axios"
 export const uploadProductImage = async (file: File) => {
   const formData = new FormData();
   formData.append('image', file);
-  // Use axios directly to set multipart headers
   const raw = localStorage.getItem('auth');
   const headers: Record<string, string> = { 'Content-Type': 'multipart/form-data' };
   if (raw) {
@@ -20,7 +19,7 @@ export const uploadProductImage = async (file: File) => {
 export const addFavorite = (productId: string) => api.post('/users/favorites/add', { productId });
 export const removeFavorite = (productId: string) => api.post('/users/favorites/remove', { productId });
 export const getFavorites = () => api.get('/users/favorites');
-import axios from "axios"
+
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
