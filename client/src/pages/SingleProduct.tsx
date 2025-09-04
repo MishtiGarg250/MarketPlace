@@ -1,13 +1,3 @@
-function getAuthUser() {
-  if (typeof window === "undefined") return null;
-  try {
-    const auth = JSON.parse(localStorage.getItem("auth") || "null");
-    if (!auth || !auth.user) return null;
-    return auth.user;
-  } catch {
-    return null;
-  }
-}
 
 import { useState, useEffect } from "react";
 import { Link} from "react-router-dom";
@@ -146,6 +136,16 @@ export default function ProductDetailPage(){
       </div>
     );
   }
+function getAuthUser() {
+  if (typeof window === "undefined") return null;
+  try {
+    const auth = JSON.parse(localStorage.getItem("auth") || "null");
+    if (!auth || !auth.user) return null;
+    return auth.user;
+  } catch {
+    return null;
+  }
+}
 
 
   return (
